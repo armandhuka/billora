@@ -37,9 +37,14 @@ export function ExpensesClient({ initialExpenses }: ExpensesClientProps) {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const handleSave = async (data: any) => {
+        const formattedData = {
+            ...data,
+            amount: Number(data.amount)
+        }
+
         const res = editingExpense
-            ? await updateExpense(editingExpense.id, data)
-            : await createExpense(data)
+            ? await updateExpense(editingExpense.id, formattedData)
+            : await createExpense(formattedData)
 
         if (res.error) {
             toast.error(`Error: ${res.error}`)
