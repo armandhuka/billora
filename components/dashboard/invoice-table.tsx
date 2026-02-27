@@ -12,7 +12,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Invoice } from "@/types/invoice"
 import { format } from "date-fns"
-import { MoreHorizontal, Eye, FileDown, Trash2 } from "lucide-react"
+import { MoreHorizontal, Eye, FileDown, Trash2, Pencil } from "lucide-react"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -25,9 +25,13 @@ import { Button } from "@/components/ui/button"
 
 interface InvoiceTableProps {
     invoices: Invoice[]
+    onEdit: (invoice: Invoice) => void
+    onDelete: (id: string) => void
+    onView: (invoice: Invoice) => void
+    onDownload: (invoice: Invoice) => void
 }
 
-export function InvoiceTable({ invoices }: InvoiceTableProps) {
+export function InvoiceTable({ invoices, onEdit, onDelete, onView, onDownload }: InvoiceTableProps) {
     const getStatusColor = (status: string) => {
         switch (status) {
             case "paid":
@@ -104,14 +108,20 @@ export function InvoiceTable({ invoices }: InvoiceTableProps) {
                                     <DropdownMenuContent align="end" className="w-[160px]">
                                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                         <DropdownMenuSeparator />
-                                        <DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => onView(invoice)}>
                                             <Eye className="mr-2 h-4 w-4" /> View Details
                                         </DropdownMenuItem>
-                                        <DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => onEdit(invoice)}>
+                                            <Pencil className="mr-2 h-4 w-4" /> Edit Invoice
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => onDownload(invoice)}>
                                             <FileDown className="mr-2 h-4 w-4" /> Download PDF
                                         </DropdownMenuItem>
                                         <DropdownMenuSeparator />
-                                        <DropdownMenuItem className="text-destructive">
+                                        <DropdownMenuItem
+                                            className="text-destructive"
+                                            onClick={() => onDelete(invoice.id)}
+                                        >
                                             <Trash2 className="mr-2 h-4 w-4" /> Delete
                                         </DropdownMenuItem>
                                     </DropdownMenuContent>

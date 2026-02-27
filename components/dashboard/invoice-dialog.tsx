@@ -30,7 +30,7 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog"
 import { Plus, Trash2, Loader2, Calculator } from "lucide-react"
-import { Customer, CreateInvoiceInput } from "@/types/invoice"
+import { Customer, CreateInvoiceInput, Invoice } from "@/types/invoice"
 import { Product } from "@/types/product"
 import { Badge } from "@/components/ui/badge"
 
@@ -60,9 +60,10 @@ interface InvoiceDialogProps {
     onSave: (data: CreateInvoiceInput) => Promise<void>
     customers: Customer[]
     products: Product[]
+    invoice?: Invoice | null
 }
 
-export function InvoiceDialog({ open, onOpenChange, onSave, customers, products }: InvoiceDialogProps) {
+export function InvoiceDialog({ open, onOpenChange, onSave, customers, products, invoice }: InvoiceDialogProps) {
     const [loading, setLoading] = React.useState(false)
 
     const form = useForm<InvoiceFormValues>({
@@ -83,6 +84,37 @@ export function InvoiceDialog({ open, onOpenChange, onSave, customers, products 
         control: form.control,
         name: "items",
     })
+
+    // Update form when invoice prop changes
+    React.useEffect(() => {
+        if (invoice) {
+            form.reset({
+                customer_id: invoice.customer_id || "",
+                invoice_number: invoice.invoice_number,
+                payment_status: invoice.payment_status,
+                subtotal: invoice.subtotal,
+                gst_total: invoice.gst_total,
+                total_amount: invoice.total_amount,
+                items: (invoice.items || []).map(item => ({
+                    product_id: item.product_id || "",
+                    quantity: item.quantity,
+                    price: item.price,
+                    gst_rate: item.gst_rate,
+                    total: item.total
+                }))
+            })
+        } else if (open) {
+            form.reset({
+                customer_id: "",
+                invoice_number: `INV-${Date.now().toString().slice(-6)}`,
+                payment_status: 'pending',
+                items: [{ product_id: "", quantity: 1, price: 0, gst_rate: 0, total: 0 }],
+                subtotal: 0,
+                gst_total: 0,
+                total_amount: 0,
+            })
+        }
+    }, [invoice, form, open])
 
     // Watch items to calculate totals
     const watchedItems = form.watch("items")
@@ -138,9 +170,9 @@ export function InvoiceDialog({ open, onOpenChange, onSave, customers, products 
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
-                    <DialogTitle>Create New Invoice</DialogTitle>
+                    <DialogTitle>{invoice ? "Edit Invoice" : "Create New Invoice"}</DialogTitle>
                     <DialogDescription>
-                        Generate a professional invoice for your business.
+                        {invoice ? "Update the details of your invoice." : "Generate a professional invoice for your business."}
                     </DialogDescription>
                 </DialogHeader>
 
@@ -153,7 +185,7 @@ export function InvoiceDialog({ open, onOpenChange, onSave, customers, products 
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>Customer</FormLabel>
-                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                        <Select onValueChange={field.onChange} value={field.value}>
                                             <FormControl>
                                                 <SelectTrigger>
                                                     <SelectValue placeholder="Select a customer" />
@@ -176,7 +208,7 @@ export function InvoiceDialog({ open, onOpenChange, onSave, customers, products 
                                     <FormItem>
                                         <FormLabel>Invoice Number</FormLabel>
                                         <FormControl>
-                                            <Input {...field} />
+                                            <Input {...field} readOnly={!!invoice} className={invoice ? "bg-muted cursor-not-allowed" : ""} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -184,7 +216,34 @@ export function InvoiceDialog({ open, onOpenChange, onSave, customers, products 
                             />
                         </div>
 
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <FormField
+                                control={form.control}
+                                name="payment_status"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Payment Status</FormLabel>
+                                        <Select onValueChange={field.onChange} value={field.value}>
+                                            <FormControl>
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Select status" />
+                                                </SelectTrigger>
+                                            </FormControl>
+                                            <SelectContent>
+                                                <SelectItem value="pending">Pending</SelectItem>
+                                                <SelectItem value="paid">Paid</SelectItem>
+                                                <SelectItem value="overdue">Overdue</SelectItem>
+                                                <SelectItem value="cancelled">Cancelled</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+
                         <div className="space-y-4">
+
                             <div className="flex items-center justify-between">
                                 <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Invoice Items</h3>
                                 <Button
@@ -335,7 +394,7 @@ export function InvoiceDialog({ open, onOpenChange, onSave, customers, products 
                             <Button type="submit" disabled={loading}>
                                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                 <Calculator className="mr-2 h-4 w-4" />
-                                Create Invoice
+                                {invoice ? "Update Invoice" : "Create Invoice"}
                             </Button>
                         </DialogFooter>
                     </form>
