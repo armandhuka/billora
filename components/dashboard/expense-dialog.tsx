@@ -35,15 +35,11 @@ import { Expense, EXPENSE_CATEGORIES } from "@/types/expense"
 
 const expenseSchema = z.object({
     category: z.string().min(1, "Category is required"),
-    amount: z.number().min(0.01, "Amount must be greater than 0"),
+    amount: z.coerce.number().min(0.01, "Amount must be greater than 0"),
     note: z.string().optional(),
 })
 
-type ExpenseFormValues = {
-    category: string
-    amount: number
-    note?: string
-}
+type ExpenseFormValues = z.infer<typeof expenseSchema>
 
 interface ExpenseDialogProps {
     open: boolean
@@ -56,9 +52,10 @@ export function ExpenseDialog({ open, onOpenChange, onSave, expense }: ExpenseDi
     const [loading, setLoading] = React.useState(false)
 
     const form = useForm<ExpenseFormValues>({
-        resolver: zodResolver(expenseSchema),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        resolver: zodResolver(expenseSchema) as any,
         defaultValues: {
-            category: "Other" as const,
+            category: "Other",
             amount: 0,
             note: "",
         },
@@ -71,19 +68,24 @@ export function ExpenseDialog({ open, onOpenChange, onSave, expense }: ExpenseDi
                 amount: Number(expense.amount),
                 note: expense.note || "",
             })
-        } else {
+        } else if (open) {
             form.reset({
                 category: "Other",
                 amount: 0,
                 note: "",
             })
         }
-    }, [expense, form])
+    }, [expense, form, open])
 
     async function onSubmit(values: ExpenseFormValues) {
         setLoading(true)
         try {
-            await onSave(values)
+            // Ensure amount is definitely a number
+            const submissionData = {
+                ...values,
+                amount: Number(values.amount)
+            }
+            await onSave(submissionData)
             onOpenChange(false)
             form.reset()
         } finally {
@@ -132,7 +134,14 @@ export function ExpenseDialog({ open, onOpenChange, onSave, expense }: ExpenseDi
                                 <FormItem>
                                     <FormLabel>Amount ($)</FormLabel>
                                     <FormControl>
-                                        <Input type="number" step="0.01" {...field} placeholder="0.00" className="font-bold text-lg" />
+                                        <Input
+                                            type="number"
+                                            step="0.01"
+                                            {...field}
+                                            onChange={(e) => field.onChange(Number(e.target.value))}
+                                            placeholder="0.00"
+                                            className="font-bold text-lg"
+                                        />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
