@@ -35,13 +35,30 @@ export async function middleware(request: NextRequest) {
         data: { user },
     } = await supabase.auth.getUser()
 
-    // Protected routes
-    if (!user && request.nextUrl.pathname.startsWith('/dashboard')) {
+    const path = request.nextUrl.pathname
+
+    const protectedPaths = [
+        '/dashboard',
+        '/products',
+        '/invoices',
+        '/purchases',
+        '/customers',
+        '/suppliers',
+        '/expenses',
+        '/reports',
+        '/settings'
+    ]
+
+    const isProtected = protectedPaths.some(p => path.startsWith(p))
+    const isAuthPage = path.startsWith('/login') || path.startsWith('/signup')
+
+    // Protected routes: Redirect to /login if not authenticated
+    if (!user && isProtected) {
         return NextResponse.redirect(new URL('/login', request.url))
     }
 
-    // Auth routes (redirect to dashboard if logged in)
-    if (user && (request.nextUrl.pathname.startsWith('/login') || request.nextUrl.pathname.startsWith('/signup'))) {
+    // Auth routes: Redirect to /dashboard if already authenticated
+    if (user && isAuthPage) {
         return NextResponse.redirect(new URL('/dashboard', request.url))
     }
 
