@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/table"
 import { Purchase } from "@/types/purchase"
 import { format } from "date-fns"
-import { MoreHorizontal, Eye, FileDown, Trash2, PackageCheck } from "lucide-react"
+import { MoreHorizontal, Eye, FileDown, Trash2, PackageCheck, Pencil } from "lucide-react"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -24,9 +24,13 @@ import { Button } from "@/components/ui/button"
 
 interface PurchaseTableProps {
     purchases: Purchase[]
+    onEdit: (purchase: Purchase) => void
+    onDelete: (id: string) => void
+    onView: (purchase: Purchase) => void
+    onDownload: (purchase: Purchase) => void
 }
 
-export function PurchaseTable({ purchases }: PurchaseTableProps) {
+export function PurchaseTable({ purchases, onEdit, onDelete, onView, onDownload }: PurchaseTableProps) {
     if (purchases.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center py-20 bg-card rounded-xl border border-dashed border-border/60">
@@ -84,14 +88,20 @@ export function PurchaseTable({ purchases }: PurchaseTableProps) {
                                     <DropdownMenuContent align="end" className="w-[160px]">
                                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                         <DropdownMenuSeparator />
-                                        <DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => onView(purchase)}>
                                             <Eye className="mr-2 h-4 w-4" /> View Details
                                         </DropdownMenuItem>
-                                        <DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => onEdit(purchase)}>
+                                            <Pencil className="mr-2 h-4 w-4" /> Edit Purchase
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => onDownload(purchase)}>
                                             <FileDown className="mr-2 h-4 w-4" /> Download PDF
                                         </DropdownMenuItem>
                                         <DropdownMenuSeparator />
-                                        <DropdownMenuItem className="text-destructive">
+                                        <DropdownMenuItem
+                                            className="text-destructive"
+                                            onClick={() => onDelete(purchase.id)}
+                                        >
                                             <Trash2 className="mr-2 h-4 w-4" /> Delete
                                         </DropdownMenuItem>
                                     </DropdownMenuContent>

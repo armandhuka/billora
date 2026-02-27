@@ -1,4 +1,5 @@
-import { getPurchases, getSuppliers } from "@/app/actions/purchases"
+import { getPurchases } from "@/app/actions/purchases"
+import { getSuppliers } from "@/app/actions/suppliers"
 import { getProducts } from "@/app/actions/products"
 import { PurchasesClient } from "@/components/dashboard/purchases-client"
 

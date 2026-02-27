@@ -20,6 +20,7 @@ export interface Purchase {
     total_amount: number
     created_at: string
     supplier?: Supplier
+    items?: PurchaseItem[]
 }
 
 export interface PurchaseItem {

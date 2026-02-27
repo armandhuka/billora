@@ -30,7 +30,7 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog"
 import { Plus, Trash2, Loader2, PackagePlus } from "lucide-react"
-import { Supplier, CreatePurchaseInput } from "@/types/purchase"
+import { Supplier, CreatePurchaseInput, Purchase } from "@/types/purchase"
 import { Product } from "@/types/product"
 import { Badge } from "@/components/ui/badge"
 
@@ -56,9 +56,10 @@ interface PurchaseDialogProps {
     onSave: (data: CreatePurchaseInput) => Promise<void>
     suppliers: Supplier[]
     products: Product[]
+    purchase?: Purchase | null
 }
 
-export function PurchaseDialog({ open, onOpenChange, onSave, suppliers, products }: PurchaseDialogProps) {
+export function PurchaseDialog({ open, onOpenChange, onSave, suppliers, products, purchase }: PurchaseDialogProps) {
     const [loading, setLoading] = React.useState(false)
 
     const form = useForm<PurchaseFormValues>({
@@ -78,6 +79,30 @@ export function PurchaseDialog({ open, onOpenChange, onSave, suppliers, products
     })
 
     const watchedItems = form.watch("items")
+
+    // Update form when purchase prop changes
+    React.useEffect(() => {
+        if (purchase) {
+            form.reset({
+                supplier_id: purchase.supplier_id || "",
+                purchase_number: purchase.purchase_number,
+                total_amount: purchase.total_amount,
+                items: (purchase.items || []).map(item => ({
+                    product_id: item.product_id || "",
+                    quantity: item.quantity,
+                    cost_price: item.cost_price,
+                    total: item.total
+                }))
+            })
+        } else if (open) {
+            form.reset({
+                supplier_id: "",
+                purchase_number: `PO-${Date.now().toString().slice(-6)}`,
+                items: [{ product_id: "", quantity: 1, cost_price: 0, total: 0 }],
+                total_amount: 0,
+            })
+        }
+    }, [purchase, form, open])
 
     React.useEffect(() => {
         let grandTotal = 0
@@ -116,9 +141,9 @@ export function PurchaseDialog({ open, onOpenChange, onSave, suppliers, products
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
-                    <DialogTitle>Record Purchase</DialogTitle>
+                    <DialogTitle>{purchase ? "Edit Purchase" : "Record Purchase"}</DialogTitle>
                     <DialogDescription>
-                        Update your inventory by recording a new purchase from a supplier.
+                        {purchase ? "Update the details of your purchase order." : "Update your inventory by recording a new purchase from a supplier."}
                     </DialogDescription>
                 </DialogHeader>
 
@@ -131,7 +156,7 @@ export function PurchaseDialog({ open, onOpenChange, onSave, suppliers, products
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>Supplier</FormLabel>
-                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                        <Select onValueChange={field.onChange} value={field.value}>
                                             <FormControl>
                                                 <SelectTrigger>
                                                     <SelectValue placeholder="Select a supplier" />
@@ -154,7 +179,7 @@ export function PurchaseDialog({ open, onOpenChange, onSave, suppliers, products
                                     <FormItem>
                                         <FormLabel>Purchase Order #</FormLabel>
                                         <FormControl>
-                                            <Input {...field} placeholder="PO-123456" />
+                                            <Input {...field} placeholder="PO-123456" readOnly={!!purchase} className={purchase ? "bg-muted cursor-not-allowed" : ""} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -309,7 +334,7 @@ export function PurchaseDialog({ open, onOpenChange, onSave, suppliers, products
                             <Button type="submit" disabled={loading}>
                                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                 <PackagePlus className="mr-2 h-4 w-4" />
-                                Record Purchase
+                                {purchase ? "Update Purchase" : "Record Purchase"}
                             </Button>
                         </DialogFooter>
                     </form>
