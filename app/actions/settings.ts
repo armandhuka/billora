@@ -61,8 +61,8 @@ export async function updateSettings(data: UpdateSettingsInput): Promise<{ succe
 
         if (error) throw error
 
+        revalidatePath("/", "layout") // Revalidate layout so currency propagates everywhere
         revalidatePath("/(dashboard)/settings", "page")
-        revalidatePath("/(dashboard)/invoices", "page") // Invoices might use settings data
         return { success: true }
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {

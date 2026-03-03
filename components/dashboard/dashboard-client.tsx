@@ -27,6 +27,7 @@ import { DashboardData } from "@/types/dashboard"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
+import { useCurrency } from "@/context/currency-context"
 
 interface DashboardClientProps {
     data: DashboardData
@@ -35,11 +36,12 @@ interface DashboardClientProps {
 
 export function DashboardClient({ data, userName }: DashboardClientProps) {
     const { stats, recentInvoices, lowStockProducts } = data
+    const { symbol } = useCurrency()
 
     const statCards = [
         {
             title: "Total Sales",
-            value: `$${stats.totalSales.toLocaleString()}`,
+            value: `${symbol}${stats.totalSales.toLocaleString()}`,
             description: `${stats.salesTrend >= 0 ? "+" : ""}${stats.salesTrend}% from last month`,
             icon: DollarSign,
             trend: stats.salesTrend >= 0 ? "up" : "down",
@@ -48,7 +50,7 @@ export function DashboardClient({ data, userName }: DashboardClientProps) {
         },
         {
             title: "Total Purchases",
-            value: `$${stats.totalPurchases.toLocaleString()}`,
+            value: `${symbol}${stats.totalPurchases.toLocaleString()}`,
             description: `${stats.purchaseTrend >= 0 ? "+" : ""}${stats.purchaseTrend}% from last month`,
             icon: ShoppingCart,
             trend: stats.purchaseTrend >= 0 ? "up" : "down",
@@ -57,7 +59,7 @@ export function DashboardClient({ data, userName }: DashboardClientProps) {
         },
         {
             title: "Net Profit",
-            value: `$${stats.netProfit.toLocaleString()}`,
+            value: `${symbol}${stats.netProfit.toLocaleString()}`,
             description: `${stats.profitTrend >= 0 ? "+" : ""}${stats.profitTrend}% from last month`,
             icon: TrendingUp,
             trend: stats.profitTrend >= 0 ? "up" : "down",
@@ -84,7 +86,7 @@ export function DashboardClient({ data, userName }: DashboardClientProps) {
         },
         {
             title: "Pending Payments",
-            value: `$${stats.pendingPayments.toLocaleString()}`,
+            value: `${symbol}${stats.pendingPayments.toLocaleString()}`,
             description: "Total outstanding from invoices",
             icon: Clock,
             trend: "neutral",
@@ -153,7 +155,7 @@ export function DashboardClient({ data, userName }: DashboardClientProps) {
                                         </div>
                                         <div className="flex items-center gap-6">
                                             <div className="flex flex-col items-end">
-                                                <span className="font-bold text-sm">${Number(invoice.total_amount).toLocaleString()}</span>
+                                                <span className="font-bold text-sm">{symbol}{Number(invoice.total_amount).toLocaleString()}</span>
                                                 <span className="text-[10px] text-muted-foreground font-medium uppercase">{format(new Date(invoice.created_at), "MMM dd, hh:mm a")}</span>
                                             </div>
                                             <Badge

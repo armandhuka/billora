@@ -5,12 +5,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { FinancialSummary } from "@/types/reports"
 import { TrendingUp, TrendingDown, DollarSign, ShoppingCart, Receipt, Wallet } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useCurrency } from "@/context/currency-context"
 
 interface ReportSummaryCardsProps {
     financials: FinancialSummary
 }
 
 export function ReportSummaryCards({ financials }: ReportSummaryCardsProps) {
+    const { symbol } = useCurrency()
     const items = [
         {
             title: "Total Sales",
@@ -61,7 +63,7 @@ export function ReportSummaryCards({ financials }: ReportSummaryCardsProps) {
                     <CardContent>
                         <div className="flex items-baseline space-x-2">
                             <span className="text-2xl font-bold">
-                                ${item.value.toFixed(2)}
+                                {symbol}{item.value.toFixed(2)}
                             </span>
                         </div>
                         <div className="mt-2 flex items-center text-[10px] font-medium text-muted-foreground">

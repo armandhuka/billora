@@ -10,6 +10,7 @@ import { ExpenseDialog } from "@/components/dashboard/expense-dialog"
 import { Expense } from "@/types/expense"
 import { createExpense, updateExpense, deleteExpense, searchExpenses } from "@/app/actions/expenses"
 import { exportToCsv } from "@/lib/export"
+import { useCurrency } from "@/context/currency-context"
 
 interface ExpensesClientProps {
     initialExpenses: Expense[]
@@ -21,6 +22,7 @@ export function ExpensesClient({ initialExpenses }: ExpensesClientProps) {
     const [searchQuery, setSearchQuery] = React.useState("")
     const [expenses, setExpenses] = React.useState<Expense[]>(initialExpenses)
     const [isSearching, setIsSearching] = React.useState(false)
+    const { symbol } = useCurrency()
 
     React.useEffect(() => {
         const timer = setTimeout(async () => {
@@ -101,7 +103,7 @@ export function ExpensesClient({ initialExpenses }: ExpensesClientProps) {
                 <div className="flex items-center gap-2">
                     <div className="hidden lg:flex flex-col items-end mr-4">
                         <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">Total Filtered</span>
-                        <span className="text-xl font-bold text-destructive">-${totalExpenses.toFixed(2)}</span>
+                        <span className="text-xl font-bold text-destructive">-{symbol}{totalExpenses.toFixed(2)}</span>
                     </div>
                     <Button variant="outline" size="sm" className="hidden sm:flex" onClick={handleExport}>
                         <Download className="mr-2 h-4 w-4" /> Export
