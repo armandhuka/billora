@@ -1,13 +1,13 @@
 "use client"
 
 import * as React from "react"
-import { getProducts, saveProduct, deleteProduct } from "@/app/actions/products"
+import { getProducts, saveProduct, deleteProduct, searchProducts } from "@/app/actions/products"
 import { Product, CreateProductInput } from "@/types/product"
 import { ProductTable } from "@/components/dashboard/product-table"
 import { ProductDialog } from "@/components/dashboard/product-dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Plus, Search, Package, AlertTriangle, RefreshCw } from "lucide-react"
+import { Plus, Search, Package, AlertTriangle, RefreshCw, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import { Badge } from "@/components/ui/badge"
 
@@ -15,6 +15,7 @@ export default function ProductsPage() {
     const [products, setProducts] = React.useState<Product[]>([])
     const [loading, setLoading] = React.useState(true)
     const [searchQuery, setSearchQuery] = React.useState("")
+    const [isSearching, setIsSearching] = React.useState(false)
     const [dialogOpen, setDialogOpen] = React.useState(false)
     const [editingProduct, setEditingProduct] = React.useState<Product | null>(null)
 
@@ -33,11 +34,18 @@ export default function ProductsPage() {
         fetchProducts()
     }, [fetchProducts])
 
-    const filteredProducts = products.filter(p =>
-        p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.sku?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.category?.toLowerCase().includes(searchQuery.toLowerCase())
-    )
+    React.useEffect(() => {
+        const timer = setTimeout(async () => {
+            setIsSearching(true)
+            const result = await searchProducts(searchQuery)
+            if (!result.error && result.data) {
+                setProducts(result.data)
+            }
+            setIsSearching(false)
+        }, 300)
+        return () => clearTimeout(timer)
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchQuery])
 
     const lowStockCount = products.filter(p => p.stock_quantity <= p.min_stock_level).length
 
@@ -108,7 +116,10 @@ export default function ProductsPage() {
 
             <div className="flex items-center gap-4">
                 <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    {isSearching
+                        ? <Loader2 className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground animate-spin" />
+                        : <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    }
                     <Input
                         placeholder="Search by name, SKU or category..."
                         className="pl-9"
@@ -119,7 +130,7 @@ export default function ProductsPage() {
             </div>
 
             <ProductTable
-                products={filteredProducts}
+                products={products}
                 onEdit={(p) => { setEditingProduct(p); setDialogOpen(true); }}
                 onDelete={handleDelete}
             />

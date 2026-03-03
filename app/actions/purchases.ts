@@ -23,6 +23,31 @@ export async function getPurchases() {
         .order("created_at", { ascending: false })
 }
 
+export async function searchPurchases(query: string) {
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { error: "Not authenticated" }
+
+    const q = query.trim()
+    let request = supabase
+        .from("purchases")
+        .select(`
+            *,
+            supplier:suppliers(*),
+            items:purchase_items(*, product:products(*))
+        `)
+        .eq("business_id", user.id)
+        .order("created_at", { ascending: false })
+
+    if (q) {
+        request = request.ilike("purchase_number", `%${q}%`)
+    }
+
+    const { data, error } = await request
+    if (error) return { error: error.message }
+    return { data }
+}
+
 export async function createPurchase(input: CreatePurchaseInput) {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()

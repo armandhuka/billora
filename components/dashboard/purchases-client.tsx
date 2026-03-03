@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Plus, Download, Filter, Search } from "lucide-react"
+import { Plus, Download, Filter, Search, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { toast } from "sonner"
@@ -10,7 +10,7 @@ import { PurchaseDialog } from "@/components/dashboard/purchase-dialog"
 import { PurchaseViewDialog } from "@/components/dashboard/purchase-view-dialog"
 import { CreatePurchaseInput, Purchase, Supplier } from "@/types/purchase"
 import { Product } from "@/types/product"
-import { createPurchase, updatePurchase, deletePurchase } from "@/app/actions/purchases"
+import { createPurchase, updatePurchase, deletePurchase, searchPurchases } from "@/app/actions/purchases"
 
 interface PurchasesClientProps {
     initialPurchases: Purchase[]
@@ -27,11 +27,20 @@ export function PurchasesClient({
     const [viewOpen, setViewOpen] = React.useState(false)
     const [selectedPurchase, setSelectedPurchase] = React.useState<Purchase | null>(null)
     const [searchQuery, setSearchQuery] = React.useState("")
+    const [purchases, setPurchases] = React.useState<Purchase[]>(initialPurchases)
+    const [isSearching, setIsSearching] = React.useState(false)
 
-    const filteredPurchases = initialPurchases.filter(purchase =>
-        purchase.purchase_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        purchase.supplier?.name.toLowerCase().includes(searchQuery.toLowerCase())
-    )
+    React.useEffect(() => {
+        const timer = setTimeout(async () => {
+            setIsSearching(true)
+            const res = await searchPurchases(searchQuery)
+            if (!res.error && res.data) {
+                setPurchases(res.data as Purchase[])
+            }
+            setIsSearching(false)
+        }, 300)
+        return () => clearTimeout(timer)
+    }, [searchQuery])
 
     const handleAdd = () => {
         setSelectedPurchase(null)
@@ -178,9 +187,12 @@ export function PurchasesClient({
 
             <div className="flex items-center gap-2">
                 <div className="relative flex-1 max-w-sm">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                    {isSearching
+                        ? <Loader2 className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground animate-spin" />
+                        : <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                    }
                     <Input
-                        placeholder="Search purchases..."
+                        placeholder="Search by purchase # or supplier..."
                         className="pl-9 bg-card"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
@@ -192,7 +204,7 @@ export function PurchasesClient({
             </div>
 
             <PurchaseTable
-                purchases={filteredPurchases}
+                purchases={purchases}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
                 onView={handleView}

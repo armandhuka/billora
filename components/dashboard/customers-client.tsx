@@ -1,14 +1,14 @@
 "use client"
 
 import * as React from "react"
-import { Plus, Download, Filter, Search } from "lucide-react"
+import { Plus, Download, Filter, Search, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { toast } from "sonner"
 import { CustomerTable } from "@/components/dashboard/customer-table"
 import { CustomerDialog } from "@/components/dashboard/customer-dialog"
 import { Customer } from "@/types/invoice"
-import { createCustomer, updateCustomer, deleteCustomer } from "@/app/actions/customers"
+import { createCustomer, updateCustomer, deleteCustomer, searchCustomers } from "@/app/actions/customers"
 
 interface CustomersClientProps {
     initialCustomers: Customer[]
@@ -18,12 +18,20 @@ export function CustomersClient({ initialCustomers }: CustomersClientProps) {
     const [open, setOpen] = React.useState(false)
     const [editingCustomer, setEditingCustomer] = React.useState<Customer | null>(null)
     const [searchQuery, setSearchQuery] = React.useState("")
+    const [customers, setCustomers] = React.useState<Customer[]>(initialCustomers)
+    const [isSearching, setIsSearching] = React.useState(false)
 
-    const filteredCustomers = initialCustomers.filter(customer =>
-        customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        customer.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        customer.phone?.includes(searchQuery)
-    )
+    React.useEffect(() => {
+        const timer = setTimeout(async () => {
+            setIsSearching(true)
+            const res = await searchCustomers(searchQuery)
+            if (!res.error && res.data) {
+                setCustomers(res.data as Customer[])
+            }
+            setIsSearching(false)
+        }, 300)
+        return () => clearTimeout(timer)
+    }, [searchQuery])
 
     const handleAdd = () => {
         setEditingCustomer(null)
@@ -81,7 +89,10 @@ export function CustomersClient({ initialCustomers }: CustomersClientProps) {
 
             <div className="flex items-center gap-2">
                 <div className="relative flex-1 max-w-sm">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                    {isSearching
+                        ? <Loader2 className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground animate-spin" />
+                        : <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                    }
                     <Input
                         placeholder="Search by name, email, or phone..."
                         className="pl-9 bg-card"
@@ -95,7 +106,7 @@ export function CustomersClient({ initialCustomers }: CustomersClientProps) {
             </div>
 
             <CustomerTable
-                customers={filteredCustomers}
+                customers={customers}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
             />

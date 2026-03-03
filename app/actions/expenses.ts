@@ -19,6 +19,27 @@ export async function getExpenses() {
         .order("created_at", { ascending: false })
 }
 
+export async function searchExpenses(query: string) {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { error: "Not authenticated" }
+
+    const q = query.trim()
+    let request = supabase
+        .from("expenses")
+        .select("*")
+        .eq("business_id", user.id)
+        .order("created_at", { ascending: false })
+
+    if (q) {
+        request = request.or(`category.ilike.%${q}%,note.ilike.%${q}%`)
+    }
+
+    const { data, error } = await request
+    if (error) return { error: error.message }
+    return { data }
+}
+
 export async function createExpense(data: {
     category: ExpenseCategory;
     amount: number;

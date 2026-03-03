@@ -18,6 +18,27 @@ export async function getSuppliers() {
         .order("name")
 }
 
+export async function searchSuppliers(query: string) {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { error: "Not authenticated" }
+
+    const q = query.trim()
+    let request = supabase
+        .from("suppliers")
+        .select("*")
+        .eq("business_id", user.id)
+        .order("name")
+
+    if (q) {
+        request = request.or(`name.ilike.%${q}%,email.ilike.%${q}%,phone.ilike.%${q}%`)
+    }
+
+    const { data, error } = await request
+    if (error) return { error: error.message }
+    return { data }
+}
+
 export async function createSupplier(data: {
     name: string;
     email?: string | null;

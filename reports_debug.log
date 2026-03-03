@@ -43,3 +43,22 @@
 ]
 [2026-03-03T05:57:43.405Z] Reports Debug - Purchases Fetched: 1
 [2026-03-03T05:57:43.705Z] Reports Debug - Expenses Fetched: 
+[2026-03-03T06:34:50.392Z] Reports Debug - User Email: "armandhuka007@gmail.com"
+[2026-03-03T06:34:50.419Z] Reports Debug - User ID: "22c4724b-3342-49c9-a7ba-1b550bf8adb6"
+[2026-03-03T06:34:50.425Z] Reports Debug - Date Range: {
+  "start": "2026-02-28T18:30:00.000Z",
+  "end": "2026-03-31T18:29:59.999Z"
+}
+[2026-03-03T06:34:50.791Z] Reports Debug - Invoices Fetched: 2
+[2026-03-03T06:34:50.798Z] Reports Debug - Sample Invoices: [
+  {
+    "total_amount": 1637,
+    "created_at": "2026-03-02T10:49:44.09321+00:00"
+  },
+  {
+    "total_amount": 1717,
+    "created_at": "2026-03-03T06:11:37.809547+00:00"
+  }
+]
+[2026-03-03T06:34:51.111Z] Reports Debug - Purchases Fetched: 1
+[2026-03-03T06:34:51.504Z] Reports Debug - Expenses Fetched: 

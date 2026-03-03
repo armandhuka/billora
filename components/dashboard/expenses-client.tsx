@@ -1,14 +1,14 @@
 "use client"
 
 import * as React from "react"
-import { Plus, Download, Filter, Search } from "lucide-react"
+import { Plus, Download, Filter, Search, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { toast } from "sonner"
 import { ExpenseTable } from "@/components/dashboard/expense-table"
 import { ExpenseDialog } from "@/components/dashboard/expense-dialog"
 import { Expense } from "@/types/expense"
-import { createExpense, updateExpense, deleteExpense } from "@/app/actions/expenses"
+import { createExpense, updateExpense, deleteExpense, searchExpenses } from "@/app/actions/expenses"
 
 interface ExpensesClientProps {
     initialExpenses: Expense[]
@@ -18,12 +18,20 @@ export function ExpensesClient({ initialExpenses }: ExpensesClientProps) {
     const [open, setOpen] = React.useState(false)
     const [editingExpense, setEditingExpense] = React.useState<Expense | null>(null)
     const [searchQuery, setSearchQuery] = React.useState("")
+    const [expenses, setExpenses] = React.useState<Expense[]>(initialExpenses)
+    const [isSearching, setIsSearching] = React.useState(false)
 
-    const filteredExpenses = initialExpenses.filter(expense =>
-        expense.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        expense.note?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        expense.amount.toString().includes(searchQuery)
-    )
+    React.useEffect(() => {
+        const timer = setTimeout(async () => {
+            setIsSearching(true)
+            const res = await searchExpenses(searchQuery)
+            if (!res.error && res.data) {
+                setExpenses(res.data as Expense[])
+            }
+            setIsSearching(false)
+        }, 300)
+        return () => clearTimeout(timer)
+    }, [searchQuery])
 
     const handleAdd = () => {
         setEditingExpense(null)
@@ -65,7 +73,7 @@ export function ExpensesClient({ initialExpenses }: ExpensesClientProps) {
         }
     }
 
-    const totalExpenses = filteredExpenses.reduce((sum, exp) => sum + Number(exp.amount), 0)
+    const totalExpenses = expenses.reduce((sum: number, exp: Expense) => sum + Number(exp.amount), 0)
 
     return (
         <div className="space-y-6">
@@ -92,7 +100,10 @@ export function ExpensesClient({ initialExpenses }: ExpensesClientProps) {
 
             <div className="flex items-center gap-2">
                 <div className="relative flex-1 max-w-sm">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                    {isSearching
+                        ? <Loader2 className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground animate-spin" />
+                        : <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                    }
                     <Input
                         placeholder="Search by category or note..."
                         className="pl-9 bg-card"
@@ -106,7 +117,7 @@ export function ExpensesClient({ initialExpenses }: ExpensesClientProps) {
             </div>
 
             <ExpenseTable
-                expenses={filteredExpenses}
+                expenses={expenses}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
             />

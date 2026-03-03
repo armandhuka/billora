@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Plus, Download, Filter, Search } from "lucide-react"
+import { Plus, Download, Filter, Search, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { toast } from "sonner"
@@ -10,7 +10,7 @@ import { InvoiceDialog } from "@/components/dashboard/invoice-dialog"
 import { InvoiceViewDialog } from "@/components/dashboard/invoice-view-dialog"
 import { Invoice, CreateInvoiceInput, Customer } from "@/types/invoice"
 import { Product } from "@/types/product"
-import { createInvoice, updateInvoice, deleteInvoice } from "@/app/actions/invoices"
+import { createInvoice, updateInvoice, deleteInvoice, searchInvoices } from "@/app/actions/invoices"
 
 interface InvoicesClientProps {
     initialInvoices: Invoice[]
@@ -23,11 +23,20 @@ export function InvoicesClient({ initialInvoices, customers, products }: Invoice
     const [viewOpen, setViewOpen] = React.useState(false)
     const [selectedInvoice, setSelectedInvoice] = React.useState<Invoice | null>(null)
     const [searchQuery, setSearchQuery] = React.useState("")
+    const [invoices, setInvoices] = React.useState<Invoice[]>(initialInvoices)
+    const [isSearching, setIsSearching] = React.useState(false)
 
-    const filteredInvoices = initialInvoices.filter(invoice =>
-        invoice.invoice_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        invoice.customer?.name.toLowerCase().includes(searchQuery.toLowerCase())
-    )
+    React.useEffect(() => {
+        const timer = setTimeout(async () => {
+            setIsSearching(true)
+            const res = await searchInvoices(searchQuery)
+            if (!res.error && res.data) {
+                setInvoices(res.data)
+            }
+            setIsSearching(false)
+        }, 300)
+        return () => clearTimeout(timer)
+    }, [searchQuery])
 
     const handleAdd = () => {
         setSelectedInvoice(null)
@@ -166,9 +175,12 @@ export function InvoicesClient({ initialInvoices, customers, products }: Invoice
 
             <div className="flex items-center gap-2">
                 <div className="relative flex-1 max-w-sm">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                    {isSearching
+                        ? <Loader2 className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground animate-spin" />
+                        : <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                    }
                     <Input
-                        placeholder="Search invoices..."
+                        placeholder="Search by invoice #, customer, or status..."
                         className="pl-9 bg-card"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
@@ -180,7 +192,7 @@ export function InvoicesClient({ initialInvoices, customers, products }: Invoice
             </div>
 
             <InvoiceTable
-                invoices={filteredInvoices}
+                invoices={invoices}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
                 onView={handleView}

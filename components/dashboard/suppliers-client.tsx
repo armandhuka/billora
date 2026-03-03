@@ -1,14 +1,14 @@
 "use client"
 
 import * as React from "react"
-import { Plus, Download, Filter, Search } from "lucide-react"
+import { Plus, Download, Filter, Search, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { toast } from "sonner"
 import { SupplierTable } from "@/components/dashboard/supplier-table"
 import { SupplierDialog } from "@/components/dashboard/supplier-dialog"
 import { Supplier } from "@/types/purchase"
-import { createSupplier, updateSupplier, deleteSupplier } from "@/app/actions/suppliers"
+import { createSupplier, updateSupplier, deleteSupplier, searchSuppliers } from "@/app/actions/suppliers"
 
 interface SuppliersClientProps {
     initialSuppliers: Supplier[]
@@ -18,12 +18,20 @@ export function SuppliersClient({ initialSuppliers }: SuppliersClientProps) {
     const [open, setOpen] = React.useState(false)
     const [editingSupplier, setEditingSupplier] = React.useState<Supplier | null>(null)
     const [searchQuery, setSearchQuery] = React.useState("")
+    const [suppliers, setSuppliers] = React.useState<Supplier[]>(initialSuppliers)
+    const [isSearching, setIsSearching] = React.useState(false)
 
-    const filteredSuppliers = initialSuppliers.filter(supplier =>
-        supplier.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        supplier.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        supplier.phone?.includes(searchQuery)
-    )
+    React.useEffect(() => {
+        const timer = setTimeout(async () => {
+            setIsSearching(true)
+            const res = await searchSuppliers(searchQuery)
+            if (!res.error && res.data) {
+                setSuppliers(res.data as Supplier[])
+            }
+            setIsSearching(false)
+        }, 300)
+        return () => clearTimeout(timer)
+    }, [searchQuery])
 
     const handleAdd = () => {
         setEditingSupplier(null)
@@ -81,7 +89,10 @@ export function SuppliersClient({ initialSuppliers }: SuppliersClientProps) {
 
             <div className="flex items-center gap-2">
                 <div className="relative flex-1 max-w-sm">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                    {isSearching
+                        ? <Loader2 className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground animate-spin" />
+                        : <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                    }
                     <Input
                         placeholder="Search by name, email, or phone..."
                         className="pl-9 bg-card"
@@ -95,7 +106,7 @@ export function SuppliersClient({ initialSuppliers }: SuppliersClientProps) {
             </div>
 
             <SupplierTable
-                suppliers={filteredSuppliers}
+                suppliers={suppliers}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
             />

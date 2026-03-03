@@ -24,6 +24,31 @@ export async function getInvoices() {
     return { data: data as Invoice[] }
 }
 
+export async function searchInvoices(query: string) {
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { error: 'Not authenticated' }
+
+    const q = query.trim()
+    let request = supabase
+        .from('invoices')
+        .select(`
+            *,
+            customer:customers(*),
+            items:invoice_items(*, product:products(*))
+        `)
+        .eq('business_id', user.id)
+        .order('created_at', { ascending: false })
+
+    if (q) {
+        request = request.or(`invoice_number.ilike.%${q}%,payment_status.ilike.%${q}%`)
+    }
+
+    const { data, error } = await request
+    if (error) return { error: error.message }
+    return { data: data as Invoice[] }
+}
+
 export async function getCustomers() {
     const supabase = createClient()
 
