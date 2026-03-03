@@ -6,6 +6,9 @@ export interface BusinessSettings {
     address: string | null
     phone: string | null
     email: string | null
+    country: string | null
+    currency_code: string | null
+    currency_symbol: string | null
     created_at: string
 }
 

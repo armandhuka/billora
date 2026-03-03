@@ -17,8 +17,11 @@ interface InvoiceRow {
 interface ProductRow {
     id: string
     name: string
+    sku: string | null
+    category: string | null
     stock_quantity: number | null
-    low_stock_threshold: number | null
+    min_stock_level: number | null
+    selling_price: number | null
 }
 
 export async function getDashboardData(): Promise<{ data?: DashboardData; error?: string }> {
@@ -46,8 +49,11 @@ export async function getDashboardData(): Promise<{ data?: DashboardData; error?
         const { data: currentExpenses } = await supabase.from("expenses").select("amount").eq("business_id", user.id).gte("created_at", currentStart).lte("created_at", currentEnd) as { data: { amount: number }[] | null }
         const { data: lastExpenses } = await supabase.from("expenses").select("amount").eq("business_id", user.id).gte("created_at", lastMonthStart).lte("created_at", lastMonthEnd) as { data: { amount: number }[] | null }
 
-        // 4. Fetch Low Stock Products
-        const { data: products } = await supabase.from("products").select("id, name, stock_quantity, low_stock_threshold").eq("business_id", user.id) as { data: ProductRow[] | null }
+        // 4. Fetch All Products for Inventory Stats
+        const { data: products } = await supabase
+            .from("products")
+            .select("id, name, sku, category, stock_quantity, min_stock_level, selling_price")
+            .eq("business_id", user.id) as { data: ProductRow[] | null }
 
         // 5. Fetch Recent Invoices (Last 5)
         const { data: recentInvoices } = await supabase
@@ -76,7 +82,18 @@ export async function getDashboardData(): Promise<{ data?: DashboardData; error?
         const lastProfit = lastSales - lastPur - lastExp
         const profitTrend = lastProfit === 0 ? 0 : ((curProfit - lastProfit) / Math.abs(lastProfit)) * 100
 
-        const lowStockItems = (products || []).filter(p => (p.stock_quantity || 0) <= (p.low_stock_threshold || 0))
+        const allProducts = products || []
+        const outOfStockItems = allProducts.filter(p => (p.stock_quantity ?? 0) <= 0)
+        const lowStockItems = allProducts.filter(p => {
+            const qty = p.stock_quantity ?? 0
+            const threshold = p.min_stock_level ?? 0
+            return qty > 0 && qty <= threshold
+        })
+        // Items to show in alerts = both low stock AND out of stock, sorted by urgency
+        const alertItems = [
+            ...outOfStockItems.map(p => ({ ...p, isOutOfStock: true })),
+            ...lowStockItems.map(p => ({ ...p, isOutOfStock: false }))
+        ]
 
         const pendingAmountData = (await supabase.from("invoices").select("total_amount").eq("business_id", user.id).eq("payment_status", "pending")).data as { total_amount: number }[] | null
         const pendingTotal = (pendingAmountData || []).reduce((acc, curr) => acc + (Number(curr.total_amount) || 0), 0)
@@ -93,14 +110,19 @@ export async function getDashboardData(): Promise<{ data?: DashboardData; error?
                     netProfit: Number(curProfit.toFixed(2)),
                     profitTrend: Number(profitTrend.toFixed(1)),
                     lowStockCount: lowStockItems.length,
+                    outOfStockCount: outOfStockItems.length,
+                    totalProducts: allProducts.length,
                     pendingPayments: Number(pendingTotal.toFixed(2))
                 },
                 recentInvoices: (recentInvoices || []) as unknown as Invoice[],
-                lowStockProducts: lowStockItems.map(p => ({
+                lowStockProducts: alertItems.map(p => ({
                     id: p.id,
                     name: p.name,
-                    stock_quantity: p.stock_quantity || 0,
-                    low_stock_threshold: p.low_stock_threshold || 0
+                    sku: p.sku,
+                    category: p.category,
+                    stock_quantity: p.stock_quantity ?? 0,
+                    min_stock_level: p.min_stock_level ?? 0,
+                    isOutOfStock: p.isOutOfStock
                 }))
             }
         }

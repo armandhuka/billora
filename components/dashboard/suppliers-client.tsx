@@ -9,6 +9,7 @@ import { SupplierTable } from "@/components/dashboard/supplier-table"
 import { SupplierDialog } from "@/components/dashboard/supplier-dialog"
 import { Supplier } from "@/types/purchase"
 import { createSupplier, updateSupplier, deleteSupplier, searchSuppliers } from "@/app/actions/suppliers"
+import { exportToCsv } from "@/lib/export"
 
 interface SuppliersClientProps {
     initialSuppliers: Supplier[]
@@ -32,6 +33,19 @@ export function SuppliersClient({ initialSuppliers }: SuppliersClientProps) {
         }, 300)
         return () => clearTimeout(timer)
     }, [searchQuery])
+
+    const handleExport = () => {
+        exportToCsv(
+            [
+                { key: "name", label: "Name" },
+                { key: "email", label: "Email" },
+                { key: "phone", label: "Phone" },
+                { key: "address", label: "Address" },
+            ],
+            suppliers,
+            `suppliers_export_${new Date().toISOString().slice(0, 10)}`
+        )
+    }
 
     const handleAdd = () => {
         setEditingSupplier(null)
@@ -78,7 +92,7 @@ export function SuppliersClient({ initialSuppliers }: SuppliersClientProps) {
                     </p>
                 </div>
                 <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm" className="hidden sm:flex">
+                    <Button variant="outline" size="sm" className="hidden sm:flex" onClick={handleExport}>
                         <Download className="mr-2 h-4 w-4" /> Export
                     </Button>
                     <Button onClick={handleAdd} size="sm" className="bg-emerald-600 hover:bg-emerald-700">

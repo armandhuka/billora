@@ -67,11 +67,20 @@ export function DashboardClient({ data, userName }: DashboardClientProps) {
         {
             title: "Low Stock",
             value: `${stats.lowStockCount} Items`,
-            description: stats.lowStockCount > 0 ? "Requires immediate reorder" : "Stock levels are optimal",
+            description: stats.lowStockCount > 0 ? "Needs reorder soon" : "All levels optimal",
             icon: AlertTriangle,
             trend: stats.lowStockCount > 0 ? "warning" : "neutral",
             color: stats.lowStockCount > 0 ? "text-amber-600" : "text-emerald-600",
             bg: stats.lowStockCount > 0 ? "bg-amber-500/10" : "bg-emerald-500/10"
+        },
+        {
+            title: "Out of Stock",
+            value: `${stats.outOfStockCount} Items`,
+            description: stats.outOfStockCount > 0 ? "Immediate action required" : "No stockouts",
+            icon: Package,
+            trend: stats.outOfStockCount > 0 ? "warning" : "neutral",
+            color: stats.outOfStockCount > 0 ? "text-rose-600" : "text-emerald-600",
+            bg: stats.outOfStockCount > 0 ? "bg-rose-500/10" : "bg-emerald-500/10"
         },
         {
             title: "Pending Payments",
@@ -168,45 +177,78 @@ export function DashboardClient({ data, userName }: DashboardClientProps) {
 
                 {/* Left Side Column */}
                 <div className="lg:col-span-3 space-y-6">
-                    {/* Low Stock Alerts */}
+                    {/* Inventory Alerts */}
                     <Card className="border-border/50 shadow-sm overflow-hidden">
                         <CardHeader className="bg-amber-500/5 border-b border-amber-500/10">
-                            <CardTitle className="flex items-center gap-2 text-amber-700 dark:text-amber-500">
-                                <AlertTriangle className="h-5 w-5" />
-                                Inventory Alerts
-                            </CardTitle>
-                            <CardDescription className="text-amber-600/70">Items currently below threshold.</CardDescription>
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <CardTitle className="flex items-center gap-2 text-amber-700 dark:text-amber-500">
+                                        <AlertTriangle className="h-5 w-5" />
+                                        Inventory Alerts
+                                    </CardTitle>
+                                    <CardDescription className="text-amber-600/70 mt-1">
+                                        {stats.outOfStockCount > 0 && (
+                                            <span className="text-rose-600 font-semibold">{stats.outOfStockCount} out of stock</span>
+                                        )}
+                                        {stats.outOfStockCount > 0 && stats.lowStockCount > 0 && " · "}
+                                        {stats.lowStockCount > 0 && (
+                                            <span className="text-amber-600 font-semibold">{stats.lowStockCount} running low</span>
+                                        )}
+                                        {stats.outOfStockCount === 0 && stats.lowStockCount === 0 && (
+                                            <span className="text-emerald-600 font-semibold">{stats.totalProducts} products · All healthy</span>
+                                        )}
+                                    </CardDescription>
+                                </div>
+                                <Button variant="ghost" size="sm" asChild className="text-amber-600 hover:text-amber-700 hover:bg-amber-500/10">
+                                    <Link href="/products">Manage</Link>
+                                </Button>
+                            </div>
                         </CardHeader>
                         <CardContent className="p-0">
                             <div className="divide-y divide-border/30">
                                 {lowStockProducts.length > 0 ? (
-                                    lowStockProducts.slice(0, 5).map((product) => (
-                                        <div key={product.id} className="flex items-center justify-between px-6 py-4 hover:bg-muted/30 transition-colors group">
-                                            <div className="flex flex-col">
-                                                <span className="font-medium text-sm truncate max-w-[150px]">{product.name}</span>
-                                                <span className="text-[10px] text-muted-foreground uppercase font-bold">Threshold: {product.low_stock_threshold}</span>
+                                    lowStockProducts.slice(0, 6).map((product) => (
+                                        <div key={product.id} className={cn(
+                                            "flex items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors group",
+                                            product.isOutOfStock && "bg-rose-500/5 hover:bg-rose-500/8"
+                                        )}>
+                                            <div className="flex flex-col gap-0.5 min-w-0">
+                                                <span className="font-medium text-sm truncate">{product.name}</span>
+                                                <span className="text-[10px] text-muted-foreground font-mono">
+                                                    {product.sku && `SKU: ${product.sku}`}
+                                                    {product.sku && product.category && " · "}
+                                                    {product.category && product.category}
+                                                </span>
                                             </div>
-                                            <div className="flex items-center gap-3">
-                                                <div className="px-3 py-1 bg-amber-500/10 border border-amber-500/20 rounded-full text-xs font-bold text-amber-600">
-                                                    {product.stock_quantity} left
-                                                </div>
-                                                <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/5 transition-all" asChild>
-                                                    <Link href="/products"><ExternalLink className="h-4 w-4" /></Link>
+                                            <div className="flex items-center gap-2 ml-2 shrink-0">
+                                                {product.isOutOfStock ? (
+                                                    <Badge className="bg-rose-500/10 text-rose-600 border-rose-500/20 text-[9px] font-bold uppercase tracking-wider">
+                                                        Out of Stock
+                                                    </Badge>
+                                                ) : (
+                                                    <div className="flex flex-col items-end">
+                                                        <span className="text-xs font-bold text-amber-600">{product.stock_quantity} left</span>
+                                                        <span className="text-[9px] text-muted-foreground">min: {product.min_stock_level}</span>
+                                                    </div>
+                                                )}
+                                                <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-primary opacity-0 group-hover:opacity-100 transition-all" asChild>
+                                                    <Link href="/products"><ExternalLink className="h-3.5 w-3.5" /></Link>
                                                 </Button>
                                             </div>
                                         </div>
                                     ))
                                 ) : (
-                                    <div className="p-12 text-center bg-emerald-500/5">
+                                    <div className="p-10 text-center bg-emerald-500/5">
                                         <div className="flex flex-col items-center gap-2">
-                                            <Package className="h-8 w-8 text-emerald-500/30" />
-                                            <p className="text-emerald-600 font-medium italic text-sm">All inventory is healthy!</p>
+                                            <Package className="h-8 w-8 text-emerald-500/40" />
+                                            <p className="text-emerald-600 font-medium text-sm">All {stats.totalProducts} products are in stock</p>
+                                            <p className="text-xs text-muted-foreground">Inventory is healthy!</p>
                                         </div>
                                     </div>
                                 )}
-                                {lowStockProducts.length > 5 && (
-                                    <Button variant="ghost" className="w-full h-10 text-[10px] font-bold uppercase tracking-widest text-primary hover:bg-primary/5 rounded-none" asChild>
-                                        <Link href="/products">View All {lowStockProducts.length} Alerts</Link>
+                                {lowStockProducts.length > 6 && (
+                                    <Button variant="ghost" className="w-full h-9 text-[10px] font-bold uppercase tracking-widest text-primary hover:bg-primary/5 rounded-none" asChild>
+                                        <Link href="/products">View All {lowStockProducts.length} Alerts →</Link>
                                     </Button>
                                 )}
                             </div>

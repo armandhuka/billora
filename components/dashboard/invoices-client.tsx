@@ -11,6 +11,7 @@ import { InvoiceViewDialog } from "@/components/dashboard/invoice-view-dialog"
 import { Invoice, CreateInvoiceInput, Customer } from "@/types/invoice"
 import { Product } from "@/types/product"
 import { createInvoice, updateInvoice, deleteInvoice, searchInvoices } from "@/app/actions/invoices"
+import { exportToCsv } from "@/lib/export"
 
 interface InvoicesClientProps {
     initialInvoices: Invoice[]
@@ -37,6 +38,30 @@ export function InvoicesClient({ initialInvoices, customers, products }: Invoice
         }, 300)
         return () => clearTimeout(timer)
     }, [searchQuery])
+
+    const handleExport = () => {
+        exportToCsv(
+            [
+                { key: "invoice_number", label: "Invoice #" },
+                { key: "customer_name", label: "Customer" },
+                { key: "date", label: "Date" },
+                { key: "subtotal", label: "Subtotal" },
+                { key: "gst_total", label: "GST Total" },
+                { key: "total_amount", label: "Total Amount" },
+                { key: "payment_status", label: "Status" },
+            ],
+            invoices.map(inv => ({
+                invoice_number: inv.invoice_number,
+                customer_name: inv.customer?.name ?? "",
+                date: new Date(inv.created_at).toLocaleDateString(),
+                subtotal: Number(inv.subtotal).toFixed(2),
+                gst_total: Number(inv.gst_total).toFixed(2),
+                total_amount: Number(inv.total_amount).toFixed(2),
+                payment_status: inv.payment_status,
+            })),
+            `invoices_export_${new Date().toISOString().slice(0, 10)}`
+        )
+    }
 
     const handleAdd = () => {
         setSelectedInvoice(null)
@@ -164,7 +189,7 @@ export function InvoicesClient({ initialInvoices, customers, products }: Invoice
                     </p>
                 </div>
                 <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm" className="hidden sm:flex">
+                    <Button variant="outline" size="sm" className="hidden sm:flex" onClick={handleExport}>
                         <Download className="mr-2 h-4 w-4" /> Export
                     </Button>
                     <Button onClick={handleAdd} size="sm" className="bg-primary hover:bg-primary/90">

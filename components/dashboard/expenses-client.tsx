@@ -9,6 +9,7 @@ import { ExpenseTable } from "@/components/dashboard/expense-table"
 import { ExpenseDialog } from "@/components/dashboard/expense-dialog"
 import { Expense } from "@/types/expense"
 import { createExpense, updateExpense, deleteExpense, searchExpenses } from "@/app/actions/expenses"
+import { exportToCsv } from "@/lib/export"
 
 interface ExpensesClientProps {
     initialExpenses: Expense[]
@@ -32,6 +33,19 @@ export function ExpensesClient({ initialExpenses }: ExpensesClientProps) {
         }, 300)
         return () => clearTimeout(timer)
     }, [searchQuery])
+
+    const handleExport = () => {
+        exportToCsv(
+            [
+                { key: "created_at", label: "Date" },
+                { key: "category", label: "Category" },
+                { key: "amount", label: "Amount" },
+                { key: "note", label: "Note" },
+            ],
+            expenses.map(e => ({ ...e, created_at: new Date(e.created_at).toLocaleDateString() })),
+            `expenses_export_${new Date().toISOString().slice(0, 10)}`
+        )
+    }
 
     const handleAdd = () => {
         setEditingExpense(null)
@@ -89,7 +103,7 @@ export function ExpensesClient({ initialExpenses }: ExpensesClientProps) {
                         <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">Total Filtered</span>
                         <span className="text-xl font-bold text-destructive">-${totalExpenses.toFixed(2)}</span>
                     </div>
-                    <Button variant="outline" size="sm" className="hidden sm:flex">
+                    <Button variant="outline" size="sm" className="hidden sm:flex" onClick={handleExport}>
                         <Download className="mr-2 h-4 w-4" /> Export
                     </Button>
                     <Button onClick={handleAdd} size="sm" className="bg-destructive hover:bg-destructive/90 text-destructive-foreground">

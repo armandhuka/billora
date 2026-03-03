@@ -10,16 +10,23 @@ export interface DashboardStats {
     netProfit: number
     profitTrend: number // percentage change
     lowStockCount: number
+    outOfStockCount: number
+    totalProducts: number
     pendingPayments: number
+}
+
+export interface LowStockProduct {
+    id: string
+    name: string
+    sku?: string | null
+    category?: string | null
+    stock_quantity: number
+    min_stock_level: number
+    isOutOfStock: boolean
 }
 
 export interface DashboardData {
     stats: DashboardStats
     recentInvoices: Invoice[]
-    lowStockProducts: {
-        id: string
-        name: string
-        stock_quantity: number
-        low_stock_threshold: number
-    }[]
+    lowStockProducts: LowStockProduct[]
 }

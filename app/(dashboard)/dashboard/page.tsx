@@ -25,6 +25,8 @@ export default async function DashboardPage() {
             netProfit: 0,
             profitTrend: 0,
             lowStockCount: 0,
+            outOfStockCount: 0,
+            totalProducts: 0,
             pendingPayments: 0
         },
         recentInvoices: [],

@@ -11,6 +11,7 @@ import { PurchaseViewDialog } from "@/components/dashboard/purchase-view-dialog"
 import { CreatePurchaseInput, Purchase, Supplier } from "@/types/purchase"
 import { Product } from "@/types/product"
 import { createPurchase, updatePurchase, deletePurchase, searchPurchases } from "@/app/actions/purchases"
+import { exportToCsv } from "@/lib/export"
 
 interface PurchasesClientProps {
     initialPurchases: Purchase[]
@@ -41,6 +42,24 @@ export function PurchasesClient({
         }, 300)
         return () => clearTimeout(timer)
     }, [searchQuery])
+
+    const handleExport = () => {
+        exportToCsv(
+            [
+                { key: "purchase_number", label: "Purchase #" },
+                { key: "supplier_name", label: "Supplier" },
+                { key: "date", label: "Date" },
+                { key: "total_amount", label: "Total Amount" },
+            ],
+            purchases.map(p => ({
+                purchase_number: p.purchase_number,
+                supplier_name: p.supplier?.name ?? "",
+                date: new Date(p.created_at).toLocaleDateString(),
+                total_amount: Number(p.total_amount).toFixed(2),
+            })),
+            `purchases_export_${new Date().toISOString().slice(0, 10)}`
+        )
+    }
 
     const handleAdd = () => {
         setSelectedPurchase(null)
@@ -176,7 +195,7 @@ export function PurchasesClient({
                     </p>
                 </div>
                 <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm" className="hidden sm:flex">
+                    <Button variant="outline" size="sm" className="hidden sm:flex" onClick={handleExport}>
                         <Download className="mr-2 h-4 w-4" /> Export
                     </Button>
                     <Button onClick={handleAdd} size="sm" className="bg-emerald-600 hover:bg-emerald-700">

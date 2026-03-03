@@ -9,6 +9,7 @@ import { CustomerTable } from "@/components/dashboard/customer-table"
 import { CustomerDialog } from "@/components/dashboard/customer-dialog"
 import { Customer } from "@/types/invoice"
 import { createCustomer, updateCustomer, deleteCustomer, searchCustomers } from "@/app/actions/customers"
+import { exportToCsv } from "@/lib/export"
 
 interface CustomersClientProps {
     initialCustomers: Customer[]
@@ -32,6 +33,19 @@ export function CustomersClient({ initialCustomers }: CustomersClientProps) {
         }, 300)
         return () => clearTimeout(timer)
     }, [searchQuery])
+
+    const handleExport = () => {
+        exportToCsv(
+            [
+                { key: "name", label: "Name" },
+                { key: "email", label: "Email" },
+                { key: "phone", label: "Phone" },
+                { key: "address", label: "Address" },
+            ],
+            customers,
+            `customers_export_${new Date().toISOString().slice(0, 10)}`
+        )
+    }
 
     const handleAdd = () => {
         setEditingCustomer(null)
@@ -78,7 +92,7 @@ export function CustomersClient({ initialCustomers }: CustomersClientProps) {
                     </p>
                 </div>
                 <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm" className="hidden sm:flex">
+                    <Button variant="outline" size="sm" className="hidden sm:flex" onClick={handleExport}>
                         <Download className="mr-2 h-4 w-4" /> Export
                     </Button>
                     <Button onClick={handleAdd} size="sm" className="bg-indigo-600 hover:bg-indigo-700">

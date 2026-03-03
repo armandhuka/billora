@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Calendar as CalendarIcon, AlertTriangle, Package2, ArrowRight, TrendingUp, TrendingDown, PieChart as PieChartIcon, BarChart3 } from "lucide-react"
+import { Calendar as CalendarIcon, AlertTriangle, Package2, ArrowRight, TrendingUp, TrendingDown, PieChart as PieChartIcon, BarChart3, Download } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -10,6 +10,7 @@ import { ReportsData } from "@/types/reports"
 import { ReportSummaryCards } from "@/components/dashboard/report-summary-cards"
 import { format, startOfMonth, endOfMonth } from "date-fns"
 import { getReportsData } from "@/app/actions/reports"
+import { exportToCsv, downloadCsv, buildCsvString } from "@/lib/export"
 import { toast } from "sonner"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
@@ -56,6 +57,37 @@ export function ReportsClient({ initialData }: ReportsClientProps) {
         }
     }
 
+    const handleExport = () => {
+        const period = `${dateRange.from}_to_${dateRange.to}`
+
+        // Sheet 1: Financial Summary
+        const summaryRows = [
+            { metric: "Total Sales", amount: Number(data.financials.totalSales).toFixed(2) },
+            { metric: "Total Purchases", amount: Number(data.financials.totalPurchases).toFixed(2) },
+            { metric: "Total Expenses", amount: Number(data.financials.totalExpenses).toFixed(2) },
+            { metric: "Net Profit", amount: Number(data.financials.netProfit).toFixed(2) },
+        ]
+        const summaryCsv = buildCsvString(
+            [{ key: "metric", label: "Metric" }, { key: "amount", label: "Amount" }],
+            summaryRows
+        )
+
+        // Sheet 2: Daily Sales Trend
+        const trendCsv = buildCsvString(
+            [{ key: "date", label: "Date" }, { key: "amount", label: "Sales Amount" }],
+            data.financials.salesTrend as unknown as Record<string, unknown>[]
+        )
+
+        // Sheet 3: Expense Breakdown
+        const expenseCsv = buildCsvString(
+            [{ key: "category", label: "Category" }, { key: "amount", label: "Amount" }],
+            data.financials.expenseBreakdown as unknown as Record<string, unknown>[]
+        )
+
+        const combined = `=== FINANCIAL SUMMARY ===\r\n${summaryCsv}\r\n\r\n=== SALES TREND ===\r\n${trendCsv}\r\n\r\n=== EXPENSE BREAKDOWN ===\r\n${expenseCsv}`
+        downloadCsv(combined, `report_${period}`)
+    }
+
     return (
         <div className="space-y-8">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -89,6 +121,14 @@ export function ReportsClient({ initialData }: ReportsClientProps) {
                         className="h-8 bg-primary hover:bg-primary/90"
                     >
                         {loading ? "Updating..." : "Update"}
+                    </Button>
+                    <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={handleExport}
+                        className="h-8"
+                    >
+                        <Download className="mr-1.5 h-3.5 w-3.5" /> Export CSV
                     </Button>
                 </div>
             </div>

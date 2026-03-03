@@ -7,9 +7,10 @@ import { ProductTable } from "@/components/dashboard/product-table"
 import { ProductDialog } from "@/components/dashboard/product-dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Plus, Search, Package, AlertTriangle, RefreshCw, Loader2 } from "lucide-react"
+import { Plus, Search, Package, AlertTriangle, RefreshCw, Loader2, Download } from "lucide-react"
 import { toast } from "sonner"
 import { Badge } from "@/components/ui/badge"
+import { exportToCsv } from "@/lib/export"
 
 export default function ProductsPage() {
     const [products, setProducts] = React.useState<Product[]>([])
@@ -72,6 +73,23 @@ export default function ProductsPage() {
         }
     }
 
+    function handleExport() {
+        exportToCsv<Product>(
+            [
+                { key: "name", label: "Name" },
+                { key: "sku", label: "SKU" },
+                { key: "category", label: "Category" },
+                { key: "purchase_price", label: "Purchase Price" },
+                { key: "selling_price", label: "Selling Price" },
+                { key: "gst_rate", label: "GST Rate (%)" },
+                { key: "stock_quantity", label: "Stock Quantity" },
+                { key: "min_stock_level", label: "Min Stock Level" },
+            ],
+            products,
+            `products_export_${new Date().toISOString().slice(0, 10)}`
+        )
+    }
+
     return (
         <div className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -80,6 +98,9 @@ export default function ProductsPage() {
                     <p className="text-muted-foreground">Manage your inventory and product details.</p>
                 </div>
                 <div className="flex items-center gap-2">
+                    <Button variant="outline" size="sm" onClick={handleExport}>
+                        <Download className="mr-2 h-4 w-4" /> Export
+                    </Button>
                     <Button variant="outline" size="icon" onClick={fetchProducts} disabled={loading}>
                         <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
                     </Button>
