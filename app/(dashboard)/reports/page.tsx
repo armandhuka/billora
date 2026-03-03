@@ -6,7 +6,7 @@ export default async function ReportsPage() {
 
     // Default fallback if error occurs
     const defaultData = {
-        financials: { totalSales: 0, totalPurchases: 0, totalExpenses: 0, netProfit: 0 },
+        financials: { totalSales: 0, totalPurchases: 0, totalExpenses: 0, netProfit: 0, salesTrend: [], expenseBreakdown: [] },
         inventory: { totalProducts: 0, lowStockCount: 0, outOfStockCount: 0, lowStockItems: [] }
     }
 

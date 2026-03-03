@@ -1,0 +1,45 @@
+[2026-03-02T11:37:33.613Z] Reports Debug - User Email: "armandhuka007@gmail.com"
+[2026-03-02T11:37:33.615Z] Reports Debug - User ID: "22c4724b-3342-49c9-a7ba-1b550bf8adb6"
+[2026-03-02T11:37:33.616Z] Reports Debug - Date Range: {
+  "start": "2026-02-28T18:30:00.000Z",
+  "end": "2026-03-31T18:29:59.999Z"
+}
+[2026-03-02T11:37:34.296Z] Reports Debug - Invoices Fetched: 1
+[2026-03-02T11:37:34.297Z] Reports Debug - Sample Invoices: [
+  {
+    "total_amount": 1637,
+    "created_at": "2026-03-02T10:49:44.09321+00:00"
+  }
+]
+[2026-03-02T11:37:35.511Z] Reports Debug - Purchases Fetched: 1
+[2026-03-02T11:37:36.844Z] Reports Debug - Expenses Fetched: 
+[2026-03-03T05:53:40.436Z] Reports Debug - User Email: "armandhuka007@gmail.com"
+[2026-03-03T05:53:40.438Z] Reports Debug - User ID: "22c4724b-3342-49c9-a7ba-1b550bf8adb6"
+[2026-03-03T05:53:40.475Z] Reports Debug - Date Range: {
+  "start": "2026-02-28T18:30:00.000Z",
+  "end": "2026-03-31T18:29:59.999Z"
+}
+[2026-03-03T05:53:41.850Z] Reports Debug - Invoices Fetched: 1
+[2026-03-03T05:53:41.853Z] Reports Debug - Sample Invoices: [
+  {
+    "total_amount": 1637,
+    "created_at": "2026-03-02T10:49:44.09321+00:00"
+  }
+]
+[2026-03-03T05:53:42.148Z] Reports Debug - Purchases Fetched: 1
+[2026-03-03T05:53:42.453Z] Reports Debug - Expenses Fetched: 
+[2026-03-03T05:57:42.784Z] Reports Debug - User Email: "armandhuka007@gmail.com"
+[2026-03-03T05:57:42.791Z] Reports Debug - User ID: "22c4724b-3342-49c9-a7ba-1b550bf8adb6"
+[2026-03-03T05:57:42.792Z] Reports Debug - Date Range: {
+  "start": "2026-02-28T18:30:00.000Z",
+  "end": "2026-03-31T18:29:59.999Z"
+}
+[2026-03-03T05:57:43.100Z] Reports Debug - Invoices Fetched: 1
+[2026-03-03T05:57:43.101Z] Reports Debug - Sample Invoices: [
+  {
+    "total_amount": 1637,
+    "created_at": "2026-03-02T10:49:44.09321+00:00"
+  }
+]
+[2026-03-03T05:57:43.405Z] Reports Debug - Purchases Fetched: 1
+[2026-03-03T05:57:43.705Z] Reports Debug - Expenses Fetched: 

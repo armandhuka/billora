@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Calendar as CalendarIcon, AlertTriangle, Package2, ArrowRight, TrendingUp, TrendingDown } from "lucide-react"
+import { Calendar as CalendarIcon, AlertTriangle, Package2, ArrowRight, TrendingUp, TrendingDown, PieChart as PieChartIcon, BarChart3 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -13,6 +13,21 @@ import { getReportsData } from "@/app/actions/reports"
 import { toast } from "sonner"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
+import {
+    ResponsiveContainer,
+    AreaChart,
+    Area,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+    Tooltip,
+    PieChart,
+    Pie,
+    Cell,
+    Legend
+} from "recharts"
+
+const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899']
 
 interface ReportsClientProps {
     initialData: ReportsData
@@ -79,6 +94,106 @@ export function ReportsClient({ initialData }: ReportsClientProps) {
             </div>
 
             <ReportSummaryCards financials={data.financials} />
+
+            <div className="grid gap-6 lg:grid-cols-2">
+                {/* Sales Trend Chart */}
+                <Card className="border-border/50 shadow-sm">
+                    <CardHeader className="flex flex-row items-center space-x-4 pb-2">
+                        <div className="p-2 bg-primary/10 rounded-lg">
+                            <BarChart3 className="h-5 w-5 text-primary" />
+                        </div>
+                        <div>
+                            <CardTitle>Sales Trend</CardTitle>
+                            <CardDescription>Daily revenue performance</CardDescription>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="h-[300px] mt-4">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={data.financials.salesTrend}>
+                                <defs>
+                                    <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                                        <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                                    </linearGradient>
+                                </defs>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                                <XAxis
+                                    dataKey="date"
+                                    stroke="hsl(var(--muted-foreground))"
+                                    fontSize={10}
+                                    tickLine={false}
+                                    axisLine={false}
+                                />
+                                <YAxis
+                                    stroke="hsl(var(--muted-foreground))"
+                                    fontSize={10}
+                                    tickLine={false}
+                                    axisLine={false}
+                                    tickFormatter={(value) => `$${value}`}
+                                />
+                                <Tooltip
+                                    contentStyle={{
+                                        backgroundColor: 'hsl(var(--card))',
+                                        borderColor: 'hsl(var(--border))',
+                                        borderRadius: '8px',
+                                        fontSize: '12px'
+                                    }}
+                                    itemStyle={{ color: 'hsl(var(--primary))' }}
+                                />
+                                <Area
+                                    type="monotone"
+                                    dataKey="amount"
+                                    stroke="hsl(var(--primary))"
+                                    fillOpacity={1}
+                                    fill="url(#colorSales)"
+                                />
+                            </AreaChart>
+                        </ResponsiveContainer>
+                    </CardContent>
+                </Card>
+
+                {/* Expense Breakdown Chart */}
+                <Card className="border-border/50 shadow-sm">
+                    <CardHeader className="flex flex-row items-center space-x-4 pb-2">
+                        <div className="p-2 bg-rose-500/10 rounded-lg">
+                            <PieChartIcon className="h-5 w-5 text-rose-600" />
+                        </div>
+                        <div>
+                            <CardTitle>Expense Breakdown</CardTitle>
+                            <CardDescription>Distribution by category</CardDescription>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="h-[300px] mt-4">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                                <Pie
+                                    data={data.financials.expenseBreakdown}
+                                    cx="50%"
+                                    cy="50%"
+                                    innerRadius={60}
+                                    outerRadius={80}
+                                    paddingAngle={5}
+                                    dataKey="amount"
+                                    nameKey="category"
+                                >
+                                    {data.financials.expenseBreakdown.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                    ))}
+                                </Pie>
+                                <Tooltip
+                                    contentStyle={{
+                                        backgroundColor: 'hsl(var(--card))',
+                                        borderColor: 'hsl(var(--border))',
+                                        borderRadius: '8px',
+                                        fontSize: '12px'
+                                    }}
+                                />
+                                <Legend />
+                            </PieChart>
+                        </ResponsiveContainer>
+                    </CardContent>
+                </Card>
+            </div>
 
             <div className="grid gap-6 md:grid-cols-2">
                 {/* Inventory Health Card */}
@@ -171,14 +286,14 @@ export function ReportsClient({ initialData }: ReportsClientProps) {
                                 <div className="flex items-center justify-between text-sm">
                                     <span className="text-muted-foreground">Total Outgoings (Purchases + Expenses)</span>
                                     <span className="font-bold text-rose-600">
-                                        ${(data.financials.totalPurchases + data.financials.totalExpenses).toFixed(2)}
+                                        ${(Number(data.financials.totalPurchases) + Number(data.financials.totalExpenses)).toFixed(2)}
                                     </span>
                                 </div>
                                 <div className="h-2 bg-muted rounded-full overflow-hidden">
                                     <div
                                         className="h-full bg-rose-500"
                                         style={{
-                                            width: `${Math.min(100, ((data.financials.totalPurchases + data.financials.totalExpenses) / (data.financials.totalSales || 1)) * 100)}%`
+                                            width: `${Math.min(100, (((Number(data.financials.totalPurchases) + Number(data.financials.totalExpenses)) || 0) / (data.financials.totalSales || 1)) * 100)}%`
                                         }}
                                     />
                                 </div>

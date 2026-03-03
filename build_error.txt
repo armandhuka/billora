@@ -1,0 +1,35 @@
+
+> billora@0.1.0 build
+> next build
+
+  ▲ Next.js 14.2.15
+  - Environments: .env.local
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully
+   Linting and checking validity of types ...
+
+Failed to compile.
+
+./app/actions/dashboard.ts
+47:32  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+84:59  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+85:60  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./app/actions/reports.ts
+11:43  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+94:71  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+95:76  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+96:74  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+101:33  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+113:33  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+123:48  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+124:50  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+139:54  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./components/dashboard/dashboard-client.tsx
+6:5  Error: 'TrendingDown' is defined but never used.  @typescript-eslint/no-unused-vars
+94:25  Error: `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.  react/no-unescaped-entities
+144:106  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/basic-features/eslint#disabling-rules

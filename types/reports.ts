@@ -1,8 +1,20 @@
+export interface SalesTrendItem {
+    date: string
+    amount: number
+}
+
+export interface ExpenseBreakdownItem {
+    category: string
+    amount: number
+}
+
 export interface FinancialSummary {
     totalSales: number
     totalPurchases: number
     totalExpenses: number
     netProfit: number
+    salesTrend: SalesTrendItem[]
+    expenseBreakdown: ExpenseBreakdownItem[]
 }
 
 export interface InventoryStatus {

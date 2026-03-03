@@ -1,0 +1,48 @@
+
+> billora@0.1.0 build
+> next build
+
+  ▲ Next.js 14.2.15
+  - Environments: .env.local
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/20) ...
+   Generating static pages (5/20) 
+   Generating static pages (10/20) 
+   Generating static pages (15/20) 
+ ✓ Generating static pages (20/20)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                              Size     First Load JS
+┌ ○ /                                    179 B          94.4 kB
+├ ○ /_not-found                          876 B          88.2 kB
+├ ○ /about                               150 B          87.5 kB
+├ ○ /contact                             150 B          87.5 kB
+├ ƒ /customers                           6.06 kB         186 kB
+├ ƒ /dashboard                           4.31 kB         114 kB
+├ ƒ /expenses                            4.55 kB         198 kB
+├ ○ /features                            150 B          87.5 kB
+├ ƒ /invoices                            7.46 kB         201 kB
+├ ○ /login                               2.67 kB         107 kB
+├ ○ /pricing                             150 B          87.5 kB
+├ ○ /products                            4.14 kB         184 kB
+├ ƒ /purchases                           7.66 kB         201 kB
+├ ƒ /reports                             112 kB          240 kB
+├ ƒ /settings                            3.94 kB         153 kB
+├ ○ /signup                              2.82 kB         107 kB
+└ ƒ /suppliers                           6.05 kB         186 kB
++ First Load JS shared by all            87.4 kB
+  ├ chunks/117-64ec1da9a9ecf825.js       31.8 kB
+  ├ chunks/fd9d1056-a636400bec710ede.js  53.6 kB
+  └ other shared chunks (total)          1.96 kB
+
+
+ƒ Middleware                             74.4 kB
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

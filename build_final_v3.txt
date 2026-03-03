@@ -1,0 +1,30 @@
+
+> billora@0.1.0 build
+> next build
+
+  ▲ Next.js 14.2.15
+  - Environments: .env.local
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/20) ...
+   Generating static pages (5/20) 
+   Generating static pages (10/20) 
+   Generating static pages (15/20) 
+ ✓ Generating static pages (20/20)
+
+> Build error occurred
+PageNotFoundError: Cannot find module for page: /_error
+    at getPagePath (C:\Users\dhuka\billora\node_modules\next\dist\server\require.js:94:15)
+    at C:\Users\dhuka\billora\node_modules\next\dist\build\index.js:1851:71
+    at Span.traceAsyncFn (C:\Users\dhuka\billora\node_modules\next\dist\trace\trace.js:154:26)
+    at moveExportedPage (C:\Users\dhuka\billora\node_modules\next\dist\build\index.js:1848:86)
+    at C:\Users\dhuka\billora\node_modules\next\dist\build\index.js:1920:31
+    at async Span.traceAsyncFn (C:\Users\dhuka\billora\node_modules\next\dist\trace\trace.js:154:20)
+    at async C:\Users\dhuka\billora\node_modules\next\dist\build\index.js:1542:17
+    at async Span.traceAsyncFn (C:\Users\dhuka\billora\node_modules\next\dist\trace\trace.js:154:20)
+    at async build (C:\Users\dhuka\billora\node_modules\next\dist\build\index.js:364:9) {
+  code: 'ENOENT'
+}
