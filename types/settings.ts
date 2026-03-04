@@ -9,6 +9,7 @@ export interface BusinessSettings {
     country: string | null
     currency_code: string | null
     currency_symbol: string | null
+    upi_id: string | null
     created_at: string
 }
 

@@ -12,14 +12,16 @@ import { Invoice, CreateInvoiceInput, Customer } from "@/types/invoice"
 import { Product } from "@/types/product"
 import { createInvoice, updateInvoice, deleteInvoice, searchInvoices } from "@/app/actions/invoices"
 import { exportToCsv } from "@/lib/export"
+import { BusinessSettings } from "@/types/settings"
 
 interface InvoicesClientProps {
     initialInvoices: Invoice[]
     customers: Customer[]
     products: Product[]
+    settings: BusinessSettings | null
 }
 
-export function InvoicesClient({ initialInvoices, customers, products }: InvoicesClientProps) {
+export function InvoicesClient({ initialInvoices, customers, products, settings }: InvoicesClientProps) {
     const [open, setOpen] = React.useState(false)
     const [viewOpen, setViewOpen] = React.useState(false)
     const [selectedInvoice, setSelectedInvoice] = React.useState<Invoice | null>(null)
@@ -237,6 +239,7 @@ export function InvoicesClient({ initialInvoices, customers, products }: Invoice
                 open={viewOpen}
                 onOpenChange={setViewOpen}
                 invoice={selectedInvoice}
+                settings={settings}
             />
         </div>
     )

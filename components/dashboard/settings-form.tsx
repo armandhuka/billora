@@ -17,7 +17,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Loader2, Save, Building2, MapPin, Phone, Mail, ReceiptText, Globe } from "lucide-react"
+import { Loader2, Save, Building2, MapPin, Phone, Mail, ReceiptText, Globe, Smartphone } from "lucide-react"
 import { BusinessSettings } from "@/types/settings"
 import { updateSettings } from "@/app/actions/settings"
 import { toast } from "sonner"
@@ -33,6 +33,7 @@ const settingsSchema = z.object({
     country: z.string().nullable(),
     currency_code: z.string().nullable(),
     currency_symbol: z.string().nullable(),
+    upi_id: z.string().nullable(),
 })
 
 type SettingsFormValues = z.infer<typeof settingsSchema>
@@ -58,6 +59,7 @@ export function SettingsForm({ settings }: SettingsFormProps) {
             country: settings?.country || "IN",
             currency_code: settings?.currency_code || "INR",
             currency_symbol: settings?.currency_symbol || "₹",
+            upi_id: settings?.upi_id || "",
         },
     })
 
@@ -235,6 +237,41 @@ export function SettingsForm({ settings }: SettingsFormProps) {
                         <p className="text-xs text-muted-foreground">
                             All monetary values across the dashboard (invoices, purchases, expenses, reports) will display in <strong>{currency.currency_code}</strong>.
                         </p>
+                    </CardContent>
+                </Card>
+
+                {/* UPI Payment Settings */}
+                <Card className="border-border/50 shadow-sm">
+                    <CardHeader className="space-y-1">
+                        <div className="flex items-center gap-2">
+                            <Smartphone className="h-5 w-5 text-primary" />
+                            <CardTitle className="text-xl">UPI Payment</CardTitle>
+                        </div>
+                        <CardDescription>
+                            Your UPI ID (VPA) is used to generate a QR code on invoices so customers can pay instantly.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <FormField
+                            control={form.control}
+                            name="upi_id"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>UPI ID (VPA)</FormLabel>
+                                    <FormControl>
+                                        <Input
+                                            placeholder="yourname@upi  or  yourname@bank"
+                                            {...field}
+                                            value={field.value || ""}
+                                        />
+                                    </FormControl>
+                                    <FormDescription>
+                                        Example: <code className="text-xs bg-muted px-1 rounded">business@okaxis</code> or <code className="text-xs bg-muted px-1 rounded">9876543210@paytm</code>
+                                    </FormDescription>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
                     </CardContent>
                 </Card>
 
