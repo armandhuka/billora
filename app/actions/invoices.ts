@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { Invoice, CreateInvoiceInput, Customer } from '@/types/invoice'
+import { logStockMovement } from '@/app/actions/stock-logs'
 
 export async function getInvoices() {
     const supabase = createClient()
@@ -108,6 +109,21 @@ export async function createInvoice(input: CreateInvoiceInput) {
     if (itemsError) {
         console.error('Error creating invoice items:', itemsError)
         return { error: itemsError.message }
+    }
+
+    // 3. Log stock movements (non-fatal — each sold item decrements stock)
+    for (const item of input.items) {
+        if (item.product_id) {
+            await logStockMovement({
+                supabase,
+                businessId: user.id,
+                productId: item.product_id,
+                type: 'sale',
+                quantity: -item.quantity,   // negative = stock out
+                referenceId: invoice.id,
+                note: `Invoice ${input.invoice_number}`,
+            })
+        }
     }
 
     revalidatePath('/invoices')

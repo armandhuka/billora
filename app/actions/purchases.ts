@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
 import { CreatePurchaseInput } from "@/types/purchase"
+import { logStockMovement } from "@/app/actions/stock-logs"
 
 export async function getPurchases() {
     const supabase = createClient()
@@ -84,6 +85,21 @@ export async function createPurchase(input: CreatePurchaseInput) {
 
     if (itemsError) {
         return { error: `Purchase created but items failed: ${itemsError.message}` }
+    }
+
+    // 3. Log stock movements (non-fatal)
+    for (const item of input.items) {
+        if (item.product_id) {
+            await logStockMovement({
+                supabase,
+                businessId: user.id,
+                productId: item.product_id,
+                type: 'purchase',
+                quantity: item.quantity,  // positive = stock in
+                referenceId: purchase.id,
+                note: `Purchase ${input.purchase_number}`,
+            })
+        }
     }
 
     revalidatePath("/purchases")
