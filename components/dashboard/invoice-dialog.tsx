@@ -29,15 +29,17 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog"
-import { Plus, Trash2, Loader2, Calculator } from "lucide-react"
+import { Plus, Trash2, Loader2, Calculator, Percent, Tag } from "lucide-react"
 import { Customer, CreateInvoiceInput, Invoice } from "@/types/invoice"
 import { Product } from "@/types/product"
 import { Badge } from "@/components/ui/badge"
+import { useCurrency } from "@/context/currency-context"
 
 const invoiceItemSchema = z.object({
     product_id: z.string().min(1, "Required"),
     quantity: z.coerce.number().int().min(1, "Min 1"),
     price: z.coerce.number().min(0),
+    discount: z.coerce.number().min(0).default(0),
     gst_rate: z.coerce.number().min(0),
     total: z.coerce.number().min(0),
 })
@@ -48,6 +50,7 @@ const invoiceSchema = z.object({
     payment_status: z.enum(['pending', 'paid', 'overdue', 'cancelled'] as const).default('pending'),
     items: z.array(invoiceItemSchema).min(1, "Add at least one item"),
     subtotal: z.coerce.number().min(0),
+    discount_amount: z.coerce.number().min(0).default(0),
     gst_total: z.coerce.number().min(0),
     total_amount: z.coerce.number().min(0),
 })
@@ -64,7 +67,10 @@ interface InvoiceDialogProps {
 }
 
 export function InvoiceDialog({ open, onOpenChange, onSave, customers, products, invoice }: InvoiceDialogProps) {
+    const { symbol } = useCurrency()
     const [loading, setLoading] = React.useState(false)
+    const [invoiceDiscountMode, setInvoiceDiscountMode] = React.useState<"flat" | "percent">("flat")
+    const [invoiceDiscountInput, setInvoiceDiscountInput] = React.useState("")
 
     const form = useForm<InvoiceFormValues>({
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -73,8 +79,9 @@ export function InvoiceDialog({ open, onOpenChange, onSave, customers, products,
             customer_id: "",
             invoice_number: `INV-${Date.now().toString().slice(-6)}`,
             payment_status: 'pending',
-            items: [{ product_id: "", quantity: 1, price: 0, gst_rate: 0, total: 0 }],
+            items: [{ product_id: "", quantity: 1, price: 0, discount: 0, gst_rate: 0, total: 0 }],
             subtotal: 0,
+            discount_amount: 0,
             gst_total: 0,
             total_amount: 0,
         },
@@ -93,64 +100,86 @@ export function InvoiceDialog({ open, onOpenChange, onSave, customers, products,
                 invoice_number: invoice.invoice_number,
                 payment_status: invoice.payment_status,
                 subtotal: invoice.subtotal,
+                discount_amount: invoice.discount_amount || 0,
                 gst_total: invoice.gst_total,
                 total_amount: invoice.total_amount,
                 items: (invoice.items || []).map(item => ({
                     product_id: item.product_id || "",
                     quantity: item.quantity,
                     price: item.price,
+                    discount: item.discount || 0,
                     gst_rate: item.gst_rate,
                     total: item.total
                 }))
             })
+            setInvoiceDiscountInput(String(invoice.discount_amount || 0))
+            setInvoiceDiscountMode("flat")
         } else if (open) {
             form.reset({
                 customer_id: "",
                 invoice_number: `INV-${Date.now().toString().slice(-6)}`,
                 payment_status: 'pending',
-                items: [{ product_id: "", quantity: 1, price: 0, gst_rate: 0, total: 0 }],
+                items: [{ product_id: "", quantity: 1, price: 0, discount: 0, gst_rate: 0, total: 0 }],
                 subtotal: 0,
+                discount_amount: 0,
                 gst_total: 0,
                 total_amount: 0,
             })
+            setInvoiceDiscountInput("")
+            setInvoiceDiscountMode("flat")
         }
     }, [invoice, form, open])
 
-    // Watch items to calculate totals
+    // Watch items + invoice discount to calculate totals dynamically
     const watchedItems = form.watch("items")
 
     React.useEffect(() => {
         let subtotal = 0
         let gst_total = 0
+        let totalItemDiscounts = 0
 
         watchedItems.forEach((item) => {
-            const lineSubtotal = (item.price || 0) * (item.quantity || 0)
+            const effectivePrice = Math.max(0, (item.price || 0) - (item.discount || 0))
+            const lineSubtotal = effectivePrice * (item.quantity || 0)
             const lineGst = lineSubtotal * ((item.gst_rate || 0) / 100)
 
-            subtotal += lineSubtotal
+            subtotal += effectivePrice * (item.quantity || 0)
+            totalItemDiscounts += (item.discount || 0) * (item.quantity || 0)
             gst_total += lineGst
         })
 
+        // Invoice-level discount
+        const discountInputVal = parseFloat(invoiceDiscountInput) || 0
+        let invoiceDiscount = 0
+        if (invoiceDiscountMode === "percent") {
+            invoiceDiscount = (subtotal + gst_total) * (discountInputVal / 100)
+        } else {
+            invoiceDiscount = discountInputVal
+        }
+        invoiceDiscount = Math.max(0, invoiceDiscount)
+
+        const total = Math.max(0, subtotal + gst_total - invoiceDiscount)
+
         form.setValue("subtotal", Number(subtotal.toFixed(2)))
         form.setValue("gst_total", Number(gst_total.toFixed(2)))
-        form.setValue("total_amount", Number((subtotal + gst_total).toFixed(2)))
-    }, [watchedItems, form])
+        form.setValue("discount_amount", Number(invoiceDiscount.toFixed(2)))
+        form.setValue("total_amount", Number(total.toFixed(2)))
+    }, [watchedItems, form, invoiceDiscountInput, invoiceDiscountMode])
 
     const handleProductChange = (index: number, productId: string) => {
         const product = products.find(p => p.id === productId)
         if (product) {
             form.setValue(`items.${index}.price`, product.selling_price || 0)
             form.setValue(`items.${index}.gst_rate`, product.gst_rate || 0)
-
-            const quantity = form.getValues(`items.${index}.quantity`)
-            const total = (product.selling_price || 0) * quantity * (1 + (product.gst_rate || 0) / 100)
-            form.setValue(`items.${index}.total`, Number(total.toFixed(2)))
+            form.setValue(`items.${index}.discount`, 0)
+            recalcItemTotal(index)
         }
     }
 
-    const handleQuantityChange = (index: number, quantity: number) => {
+    const recalcItemTotal = (index: number) => {
         const item = form.getValues(`items.${index}`)
-        const lineSubtotal = (item.price || 0) * quantity
+        const effectivePrice = Math.max(0, (item.price || 0) - (item.discount || 0))
+        const lineSubtotal = effectivePrice * (item.quantity || 0)
         const lineGst = lineSubtotal * ((item.gst_rate || 0) / 100)
         form.setValue(`items.${index}.total`, Number((lineSubtotal + lineGst).toFixed(2)))
     }
@@ -168,7 +197,7 @@ export function InvoiceDialog({ open, onOpenChange, onSave, customers, products,
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
+            <DialogContent className="sm:max-w-[860px] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>{invoice ? "Edit Invoice" : "Create New Invoice"}</DialogTitle>
                     <DialogDescription>
@@ -242,15 +271,15 @@ export function InvoiceDialog({ open, onOpenChange, onSave, customers, products,
                             />
                         </div>
 
+                        {/* ── ITEMS TABLE ── */}
                         <div className="space-y-4">
-
                             <div className="flex items-center justify-between">
                                 <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Invoice Items</h3>
                                 <Button
                                     type="button"
                                     variant="outline"
                                     size="sm"
-                                    onClick={() => append({ product_id: "", quantity: 1, price: 0, gst_rate: 0, total: 0 })}
+                                    onClick={() => append({ product_id: "", quantity: 1, price: 0, discount: 0, gst_rate: 0, total: 0 })}
                                 >
                                     <Plus className="h-4 w-4 mr-1" /> Add Item
                                 </Button>
@@ -260,17 +289,23 @@ export function InvoiceDialog({ open, onOpenChange, onSave, customers, products,
                                 <table className="w-full text-sm">
                                     <thead className="bg-muted/50 border-b border-border/50">
                                         <tr>
-                                            <th className="px-4 py-2 text-left font-medium">Product</th>
-                                            <th className="px-4 py-2 text-right font-medium w-24">Qty</th>
-                                            <th className="px-4 py-2 text-right font-medium w-32">Price</th>
-                                            <th className="px-4 py-2 text-right font-medium w-32">Total</th>
-                                            <th className="px-4 py-2 w-10"></th>
+                                            <th className="px-3 py-2 text-left font-medium">Product</th>
+                                            <th className="px-3 py-2 text-right font-medium w-20">Qty</th>
+                                            <th className="px-3 py-2 text-right font-medium w-28">Price</th>
+                                            <th className="px-3 py-2 text-right font-medium w-28">
+                                                <div className="flex items-center justify-end gap-1">
+                                                    <Tag className="h-3 w-3" />
+                                                    Disc.
+                                                </div>
+                                            </th>
+                                            <th className="px-3 py-2 text-right font-medium w-28">Total</th>
+                                            <th className="px-3 py-2 w-10"></th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-border/50">
                                         {fields.map((item, index) => (
                                             <tr key={item.id} className="group hover:bg-muted/30 transition-colors">
-                                                <td className="px-4 py-3">
+                                                <td className="px-3 py-3">
                                                     <FormField
                                                         control={form.control}
                                                         name={`items.${index}.product_id`}
@@ -291,7 +326,7 @@ export function InvoiceDialog({ open, onOpenChange, onSave, customers, products,
                                                                     <SelectContent>
                                                                         {products.map((p) => (
                                                                             <SelectItem key={p.id} value={p.id}>
-                                                                                <div className="flex justify-between items-center w-64">
+                                                                                <div className="flex justify-between items-center w-52">
                                                                                     <span>{p.name}</span>
                                                                                     <Badge variant="outline" className="text-[10px]">
                                                                                         Stock: {p.stock_quantity}
@@ -305,7 +340,7 @@ export function InvoiceDialog({ open, onOpenChange, onSave, customers, products,
                                                         )}
                                                     />
                                                 </td>
-                                                <td className="px-4 py-3">
+                                                <td className="px-3 py-3">
                                                     <FormField
                                                         control={form.control}
                                                         name={`items.${index}.quantity`}
@@ -317,9 +352,8 @@ export function InvoiceDialog({ open, onOpenChange, onSave, customers, products,
                                                                         className="text-right border-none bg-transparent shadow-none focus-visible:ring-1"
                                                                         {...field}
                                                                         onChange={(e) => {
-                                                                            const val = Number(e.target.value)
-                                                                            field.onChange(val)
-                                                                            handleQuantityChange(index, val)
+                                                                            field.onChange(Number(e.target.value))
+                                                                            setTimeout(() => recalcItemTotal(index), 0)
                                                                         }}
                                                                     />
                                                                 </FormControl>
@@ -327,7 +361,7 @@ export function InvoiceDialog({ open, onOpenChange, onSave, customers, products,
                                                         )}
                                                     />
                                                 </td>
-                                                <td className="px-4 py-3">
+                                                <td className="px-3 py-3">
                                                     <FormField
                                                         control={form.control}
                                                         name={`items.${index}.price`}
@@ -345,10 +379,35 @@ export function InvoiceDialog({ open, onOpenChange, onSave, customers, products,
                                                         )}
                                                     />
                                                 </td>
-                                                <td className="px-4 py-3 text-right font-medium">
-                                                    ${watchedItems[index]?.total?.toFixed(2) || "0.00"}
+                                                {/* Per-item discount */}
+                                                <td className="px-3 py-3">
+                                                    <FormField
+                                                        control={form.control}
+                                                        name={`items.${index}.discount`}
+                                                        render={({ field }) => (
+                                                            <FormItem>
+                                                                <FormControl>
+                                                                    <Input
+                                                                        type="number"
+                                                                        step="0.01"
+                                                                        min="0"
+                                                                        placeholder="0"
+                                                                        className="text-right border-none bg-transparent shadow-none focus-visible:ring-1 text-rose-600"
+                                                                        {...field}
+                                                                        onChange={(e) => {
+                                                                            field.onChange(Number(e.target.value))
+                                                                            setTimeout(() => recalcItemTotal(index), 0)
+                                                                        }}
+                                                                    />
+                                                                </FormControl>
+                                                            </FormItem>
+                                                        )}
+                                                    />
                                                 </td>
-                                                <td className="px-4 py-3">
+                                                <td className="px-3 py-3 text-right font-medium">
+                                                    {symbol}{watchedItems[index]?.total?.toFixed(2) || "0.00"}
+                                                </td>
+                                                <td className="px-3 py-3">
                                                     <Button
                                                         type="button"
                                                         variant="ghost"
@@ -367,18 +426,69 @@ export function InvoiceDialog({ open, onOpenChange, onSave, customers, products,
                             </div>
                         </div>
 
-                        <div className="flex flex-col items-end space-y-2 pt-4 border-t">
-                            <div className="flex w-64 justify-between text-sm">
+                        {/* ── TOTALS + INVOICE DISCOUNT ── */}
+                        <div className="flex flex-col items-end space-y-3 pt-4 border-t">
+                            <div className="flex w-72 justify-between text-sm">
                                 <span className="text-muted-foreground">Subtotal</span>
-                                <span>${form.watch("subtotal").toFixed(2)}</span>
+                                <span className="font-mono">{symbol}{form.watch("subtotal").toFixed(2)}</span>
                             </div>
-                            <div className="flex w-64 justify-between text-sm">
+                            <div className="flex w-72 justify-between text-sm">
                                 <span className="text-muted-foreground">GST Total</span>
-                                <span>${form.watch("gst_total").toFixed(2)}</span>
+                                <span className="font-mono">{symbol}{form.watch("gst_total").toFixed(2)}</span>
                             </div>
-                            <div className="flex w-64 justify-between text-lg font-bold">
+
+                            {/* Invoice-level discount */}
+                            <div className="w-72 space-y-1.5">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-sm text-muted-foreground flex items-center gap-1.5">
+                                        <Tag className="h-3.5 w-3.5 text-rose-500" />
+                                        Invoice Discount
+                                    </span>
+                                    <div className="flex items-center gap-1 bg-muted/40 rounded-md p-0.5">
+                                        <button
+                                            type="button"
+                                            onClick={() => setInvoiceDiscountMode("flat")}
+                                            className={`px-2 py-0.5 text-[11px] font-medium rounded transition-all ${invoiceDiscountMode === "flat"
+                                                    ? "bg-background shadow text-foreground"
+                                                    : "text-muted-foreground hover:text-foreground"
+                                                }`}
+                                        >
+                                            {symbol}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setInvoiceDiscountMode("percent")}
+                                            className={`px-2 py-0.5 text-[11px] font-medium rounded transition-all ${invoiceDiscountMode === "percent"
+                                                    ? "bg-background shadow text-foreground"
+                                                    : "text-muted-foreground hover:text-foreground"
+                                                }`}
+                                        >
+                                            <Percent className="h-3 w-3" />
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className="flex gap-2 items-center">
+                                    <Input
+                                        type="number"
+                                        step="0.01"
+                                        min="0"
+                                        placeholder="0"
+                                        value={invoiceDiscountInput}
+                                        onChange={(e) => setInvoiceDiscountInput(e.target.value)}
+                                        className="text-right text-rose-600 h-8"
+                                    />
+                                    {form.watch("discount_amount") > 0 && (
+                                        <Badge variant="outline" className="text-rose-600 border-rose-200 text-[10px] whitespace-nowrap shrink-0">
+                                            -{symbol}{form.watch("discount_amount").toFixed(2)}
+                                        </Badge>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="w-72 h-px bg-border" />
+                            <div className="flex w-72 justify-between text-lg font-bold">
                                 <span>Total Amount</span>
-                                <span className="text-primary">${form.watch("total_amount").toFixed(2)}</span>
+                                <span className="text-primary font-mono">{symbol}{form.watch("total_amount").toFixed(2)}</span>
                             </div>
                         </div>
 

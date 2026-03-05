@@ -18,6 +18,7 @@ export interface Invoice {
     customer_id?: string | null
     invoice_number: string
     subtotal: number
+    discount_amount: number
     gst_total: number
     total_amount: number
     payment_status: PaymentStatus
@@ -32,6 +33,7 @@ export interface InvoiceItem {
     product_id?: string | null
     quantity: number
     price: number
+    discount: number       // per-item discount amount (flat)
     gst_rate: number
     total: number
     created_at: string
@@ -42,6 +44,7 @@ export interface CreateInvoiceInput {
     customer_id?: string | null
     invoice_number: string
     subtotal: number
+    discount_amount: number
     gst_total: number
     total_amount: number
     payment_status: PaymentStatus
@@ -49,6 +52,7 @@ export interface CreateInvoiceInput {
         product_id?: string | null
         quantity: number
         price: number
+        discount: number
         gst_rate: number
         total: number
     }[]

@@ -80,6 +80,7 @@ export async function createInvoice(input: CreateInvoiceInput) {
             customer_id: input.customer_id,
             invoice_number: input.invoice_number,
             subtotal: input.subtotal,
+            discount_amount: input.discount_amount || 0,
             gst_total: input.gst_total,
             total_amount: input.total_amount,
             payment_status: input.payment_status
@@ -98,6 +99,7 @@ export async function createInvoice(input: CreateInvoiceInput) {
         product_id: item.product_id,
         quantity: item.quantity,
         price: item.price,
+        discount: item.discount || 0,
         gst_rate: item.gst_rate,
         total: item.total
     }))
@@ -144,6 +146,7 @@ export async function updateInvoice(id: string, input: CreateInvoiceInput) {
             customer_id: input.customer_id,
             invoice_number: input.invoice_number,
             subtotal: input.subtotal,
+            discount_amount: input.discount_amount || 0,
             gst_total: input.gst_total,
             total_amount: input.total_amount,
             payment_status: input.payment_status
@@ -173,6 +176,7 @@ export async function updateInvoice(id: string, input: CreateInvoiceInput) {
         product_id: item.product_id,
         quantity: item.quantity,
         price: item.price,
+        discount: item.discount || 0,
         gst_rate: item.gst_rate,
         total: item.total
     }))

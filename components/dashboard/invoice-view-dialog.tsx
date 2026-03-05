@@ -186,7 +186,8 @@ export function InvoiceViewDialog({ open, onOpenChange, invoice, settings }: Inv
                                     <tr>
                                         <th className="px-4 py-3 text-left font-semibold">Item &amp; Description</th>
                                         <th className="px-4 py-3 text-right font-semibold w-24">Qty</th>
-                                        <th className="px-4 py-3 text-right font-semibold w-32">Price</th>
+                                        <th className="px-4 py-3 text-right font-semibold w-28">Price</th>
+                                        <th className="px-4 py-3 text-right font-semibold w-28">Disc.</th>
                                         <th className="px-4 py-3 text-right font-semibold w-32">Total</th>
                                     </tr>
                                 </thead>
@@ -199,6 +200,9 @@ export function InvoiceViewDialog({ open, onOpenChange, invoice, settings }: Inv
                                             </td>
                                             <td className="px-4 py-4 text-right">{item.quantity}</td>
                                             <td className="px-4 py-4 text-right font-mono">{symbol}{item.price.toFixed(2)}</td>
+                                            <td className="px-4 py-4 text-right font-mono text-rose-600">
+                                                {(item.discount || 0) > 0 ? `-${symbol}${(item.discount || 0).toFixed(2)}` : "—"}
+                                            </td>
                                             <td className="px-4 py-4 text-right font-bold font-mono">{symbol}{item.total.toFixed(2)}</td>
                                         </tr>
                                     ))}
@@ -255,6 +259,12 @@ export function InvoiceViewDialog({ open, onOpenChange, invoice, settings }: Inv
                                 <span className="text-muted-foreground">GST Total</span>
                                 <span className="font-mono">{symbol}{invoice.gst_total.toFixed(2)}</span>
                             </div>
+                            {(invoice.discount_amount || 0) > 0 && (
+                                <div className="flex justify-between text-sm text-rose-600">
+                                    <span>Discount</span>
+                                    <span className="font-mono">-{symbol}{(invoice.discount_amount || 0).toFixed(2)}</span>
+                                </div>
+                            )}
                             <div className="h-px bg-border my-3" />
                             <div className="flex justify-between text-lg font-bold">
                                 <span>Total</span>

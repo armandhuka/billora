@@ -11,6 +11,7 @@ interface PublicInvoiceItem {
     id: string
     quantity: number
     price: number
+    discount?: number
     gst_rate: number
     total: number
     product?: { id: string; name: string; sku?: string | null } | null
@@ -20,6 +21,7 @@ interface PublicInvoiceData {
     id: string
     invoice_number: string
     subtotal: number
+    discount_amount?: number
     gst_total: number
     total_amount: number
     payment_status: string
@@ -177,7 +179,8 @@ export function PublicInvoice({ invoice, settings }: PublicInvoiceProps) {
                                     <tr>
                                         <th className="px-4 py-3 text-left font-semibold text-xs uppercase tracking-wide">Item</th>
                                         <th className="px-4 py-3 text-right font-semibold text-xs uppercase tracking-wide w-20">Qty</th>
-                                        <th className="px-4 py-3 text-right font-semibold text-xs uppercase tracking-wide w-28">Price</th>
+                                        <th className="px-4 py-3 text-right font-semibold text-xs uppercase tracking-wide w-24">Price</th>
+                                        <th className="px-4 py-3 text-right font-semibold text-xs uppercase tracking-wide w-24">Disc.</th>
                                         <th className="px-4 py-3 text-right font-semibold text-xs uppercase tracking-wide w-28">Total</th>
                                     </tr>
                                 </thead>
@@ -192,6 +195,9 @@ export function PublicInvoice({ invoice, settings }: PublicInvoiceProps) {
                                             </td>
                                             <td className="px-4 py-3.5 text-right text-muted-foreground">{item.quantity}</td>
                                             <td className="px-4 py-3.5 text-right font-mono">{symbol}{item.price.toFixed(2)}</td>
+                                            <td className="px-4 py-3.5 text-right font-mono text-rose-600">
+                                                {(item.discount || 0) > 0 ? `-${symbol}${(item.discount || 0).toFixed(2)}` : "—"}
+                                            </td>
                                             <td className="px-4 py-3.5 text-right font-bold font-mono">{symbol}{item.total.toFixed(2)}</td>
                                         </tr>
                                     ))}
@@ -234,6 +240,12 @@ export function PublicInvoice({ invoice, settings }: PublicInvoiceProps) {
                                 <span className="text-muted-foreground">GST Total</span>
                                 <span className="font-mono">{symbol}{Number(invoice.gst_total).toFixed(2)}</span>
                             </div>
+                            {(invoice.discount_amount || 0) > 0 && (
+                                <div className="flex justify-between text-sm text-rose-600">
+                                    <span>Discount</span>
+                                    <span className="font-mono">-{symbol}{Number(invoice.discount_amount || 0).toFixed(2)}</span>
+                                </div>
+                            )}
                             <div className="h-px bg-border" />
                             <div className="flex justify-between font-bold text-lg">
                                 <span>Total</span>
