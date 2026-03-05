@@ -8,6 +8,7 @@ import { toast } from "sonner"
 import { InvoiceTable } from "@/components/dashboard/invoice-table"
 import { InvoiceDialog } from "@/components/dashboard/invoice-dialog"
 import { InvoiceViewDialog } from "@/components/dashboard/invoice-view-dialog"
+import { RecordPaymentDialog } from "@/components/dashboard/record-payment-dialog"
 import { Invoice, CreateInvoiceInput, Customer } from "@/types/invoice"
 import { Product } from "@/types/product"
 import { createInvoice, updateInvoice, deleteInvoice, searchInvoices } from "@/app/actions/invoices"
@@ -24,6 +25,7 @@ interface InvoicesClientProps {
 export function InvoicesClient({ initialInvoices, customers, products, settings }: InvoicesClientProps) {
     const [open, setOpen] = React.useState(false)
     const [viewOpen, setViewOpen] = React.useState(false)
+    const [paymentOpen, setPaymentOpen] = React.useState(false)
     const [selectedInvoice, setSelectedInvoice] = React.useState<Invoice | null>(null)
     const [searchQuery, setSearchQuery] = React.useState("")
     const [invoices, setInvoices] = React.useState<Invoice[]>(initialInvoices)
@@ -224,6 +226,7 @@ export function InvoicesClient({ initialInvoices, customers, products, settings 
                 onDelete={handleDelete}
                 onView={handleView}
                 onDownload={handleDownload}
+                onRecordPayment={(inv) => { setSelectedInvoice(inv); setPaymentOpen(true) }}
             />
 
             <InvoiceDialog
@@ -240,6 +243,16 @@ export function InvoicesClient({ initialInvoices, customers, products, settings 
                 onOpenChange={setViewOpen}
                 invoice={selectedInvoice}
                 settings={settings}
+            />
+
+            <RecordPaymentDialog
+                open={paymentOpen}
+                onOpenChange={setPaymentOpen}
+                invoice={selectedInvoice}
+                onSuccess={async () => {
+                    const res = await searchInvoices(searchQuery)
+                    if (!res.error && res.data) setInvoices(res.data)
+                }}
             />
         </div>
     )

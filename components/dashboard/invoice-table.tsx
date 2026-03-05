@@ -12,7 +12,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Invoice } from "@/types/invoice"
 import { format } from "date-fns"
-import { MoreHorizontal, Eye, FileDown, Trash2, Pencil } from "lucide-react"
+import { MoreHorizontal, Eye, FileDown, Trash2, Pencil, CreditCard } from "lucide-react"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -29,9 +29,10 @@ interface InvoiceTableProps {
     onDelete: (id: string) => void
     onView: (invoice: Invoice) => void
     onDownload: (invoice: Invoice) => void
+    onRecordPayment: (invoice: Invoice) => void
 }
 
-export function InvoiceTable({ invoices, onEdit, onDelete, onView, onDownload }: InvoiceTableProps) {
+export function InvoiceTable({ invoices, onEdit, onDelete, onView, onDownload, onRecordPayment }: InvoiceTableProps) {
     const getStatusColor = (status: string) => {
         switch (status) {
             case "paid":
@@ -114,6 +115,11 @@ export function InvoiceTable({ invoices, onEdit, onDelete, onView, onDownload }:
                                         <DropdownMenuItem onClick={() => onEdit(invoice)}>
                                             <Pencil className="mr-2 h-4 w-4" /> Edit Invoice
                                         </DropdownMenuItem>
+                                        {invoice.payment_status !== "paid" && (
+                                            <DropdownMenuItem onClick={() => onRecordPayment(invoice)}>
+                                                <CreditCard className="mr-2 h-4 w-4" /> Record Payment
+                                            </DropdownMenuItem>
+                                        )}
                                         <DropdownMenuItem onClick={() => onDownload(invoice)}>
                                             <FileDown className="mr-2 h-4 w-4" /> Download PDF
                                         </DropdownMenuItem>
