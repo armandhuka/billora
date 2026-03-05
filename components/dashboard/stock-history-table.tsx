@@ -6,7 +6,7 @@ import { StockLog } from "@/app/actions/stock-logs"
 import { Badge } from "@/components/ui/badge"
 import {
     ShoppingBag, ShoppingCart, Settings2, ArrowUp, ArrowDown,
-    Package, AlertCircle,
+    Package,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 

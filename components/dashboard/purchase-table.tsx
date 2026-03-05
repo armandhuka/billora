@@ -6,7 +6,7 @@ import {
 } from "@/components/ui/table"
 import { Purchase } from "@/types/purchase"
 import { format } from "date-fns"
-import { MoreHorizontal, Eye, FileDown, Trash2, PackageCheck, Pencil, Copy, Truck } from "lucide-react"
+import { MoreHorizontal, Eye, FileDown, Trash2, PackageCheck, Pencil, Copy } from "lucide-react"
 import {
     DropdownMenu, DropdownMenuContent, DropdownMenuItem,
     DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,

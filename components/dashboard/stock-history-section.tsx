@@ -22,7 +22,6 @@ export function StockHistorySection({
     initialLogs,
 }: StockHistorySectionProps) {
     const [logs, setLogs] = React.useState<StockLog[]>(initialLogs)
-    const [stock, setStock] = React.useState(currentStock)
     const [adjustOpen, setAdjustOpen] = React.useState(false)
     const [refreshing, setRefreshing] = React.useState(false)
 
@@ -82,7 +81,7 @@ export function StockHistorySection({
                 onOpenChange={setAdjustOpen}
                 productId={productId}
                 productName={productName}
-                currentStock={stock}
+                currentStock={currentStock}
                 onAdjusted={handleAdjusted}
             />
         </div>

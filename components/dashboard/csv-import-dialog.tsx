@@ -17,7 +17,6 @@ interface CsvImportDialogProps {
 }
 
 const REQUIRED_COLS = ["name"]
-const OPTIONAL_COLS = ["sku", "category", "barcode", "description", "unit", "purchase_price", "selling_price", "gst_rate", "stock_quantity", "min_stock_level"]
 
 function parseCsv(text: string): Record<string, string>[] {
     const lines = text.trim().split(/\r?\n/)

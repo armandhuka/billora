@@ -136,7 +136,6 @@ export function InvoiceDialog({ open, onOpenChange, onSave, customers, products,
     React.useEffect(() => {
         let subtotal = 0
         let gst_total = 0
-        let totalItemDiscounts = 0
 
         watchedItems.forEach((item) => {
             const effectivePrice = Math.max(0, (item.price || 0) - (item.discount || 0))
@@ -144,7 +143,6 @@ export function InvoiceDialog({ open, onOpenChange, onSave, customers, products,
             const lineGst = lineSubtotal * ((item.gst_rate || 0) / 100)
 
             subtotal += effectivePrice * (item.quantity || 0)
-            totalItemDiscounts += (item.discount || 0) * (item.quantity || 0)
             gst_total += lineGst
         })
 
@@ -449,8 +447,8 @@ export function InvoiceDialog({ open, onOpenChange, onSave, customers, products,
                                             type="button"
                                             onClick={() => setInvoiceDiscountMode("flat")}
                                             className={`px-2 py-0.5 text-[11px] font-medium rounded transition-all ${invoiceDiscountMode === "flat"
-                                                    ? "bg-background shadow text-foreground"
-                                                    : "text-muted-foreground hover:text-foreground"
+                                                ? "bg-background shadow text-foreground"
+                                                : "text-muted-foreground hover:text-foreground"
                                                 }`}
                                         >
                                             {symbol}
@@ -459,8 +457,8 @@ export function InvoiceDialog({ open, onOpenChange, onSave, customers, products,
                                             type="button"
                                             onClick={() => setInvoiceDiscountMode("percent")}
                                             className={`px-2 py-0.5 text-[11px] font-medium rounded transition-all ${invoiceDiscountMode === "percent"
-                                                    ? "bg-background shadow text-foreground"
-                                                    : "text-muted-foreground hover:text-foreground"
+                                                ? "bg-background shadow text-foreground"
+                                                : "text-muted-foreground hover:text-foreground"
                                                 }`}
                                         >
                                             <Percent className="h-3 w-3" />

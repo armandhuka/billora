@@ -7,7 +7,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
-    Loader2, FileText, CheckCircle2, Clock, AlertTriangle,
+    Loader2, FileText, CheckCircle2, AlertTriangle,
     Download, ArrowUpRight, ArrowDownLeft, Wallet, CalendarDays,
 } from "lucide-react"
 import { Customer } from "@/types/invoice"
