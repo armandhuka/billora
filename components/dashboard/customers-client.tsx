@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { toast } from "sonner"
 import { CustomerTable } from "@/components/dashboard/customer-table"
 import { CustomerDialog } from "@/components/dashboard/customer-dialog"
+import { CustomerLedgerDialog } from "@/components/dashboard/customer-ledger-dialog"
 import { Customer } from "@/types/invoice"
 import { createCustomer, updateCustomer, deleteCustomer, searchCustomers } from "@/app/actions/customers"
 import { exportToCsv } from "@/lib/export"
@@ -21,6 +22,8 @@ export function CustomersClient({ initialCustomers }: CustomersClientProps) {
     const [searchQuery, setSearchQuery] = React.useState("")
     const [customers, setCustomers] = React.useState<Customer[]>(initialCustomers)
     const [isSearching, setIsSearching] = React.useState(false)
+    const [ledgerOpen, setLedgerOpen] = React.useState(false)
+    const [ledgerCustomer, setLedgerCustomer] = React.useState<Customer | null>(null)
 
     React.useEffect(() => {
         const timer = setTimeout(async () => {
@@ -123,6 +126,7 @@ export function CustomersClient({ initialCustomers }: CustomersClientProps) {
                 customers={customers}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
+                onViewHistory={(c) => { setLedgerCustomer(c); setLedgerOpen(true) }}
             />
 
             <CustomerDialog
@@ -130,6 +134,11 @@ export function CustomersClient({ initialCustomers }: CustomersClientProps) {
                 onOpenChange={setOpen}
                 onSave={handleSave}
                 customer={editingCustomer}
+            />
+            <CustomerLedgerDialog
+                open={ledgerOpen}
+                onOpenChange={setLedgerOpen}
+                customer={ledgerCustomer}
             />
         </div>
     )

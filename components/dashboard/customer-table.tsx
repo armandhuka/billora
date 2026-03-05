@@ -10,7 +10,7 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { Customer } from "@/types/invoice"
-import { MoreHorizontal, Mail, Phone, MapPin, Edit, Trash2, User } from "lucide-react"
+import { MoreHorizontal, Mail, Phone, MapPin, Edit, Trash2, User, History } from "lucide-react"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -26,9 +26,10 @@ interface CustomerTableProps {
     customers: Customer[]
     onEdit: (customer: Customer) => void
     onDelete: (id: string) => void
+    onViewHistory: (customer: Customer) => void
 }
 
-export function CustomerTable({ customers, onEdit, onDelete }: CustomerTableProps) {
+export function CustomerTable({ customers, onEdit, onDelete, onViewHistory }: CustomerTableProps) {
     if (customers.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center py-20 bg-card rounded-xl border border-dashed border-border/60">
@@ -108,6 +109,9 @@ export function CustomerTable({ customers, onEdit, onDelete }: CustomerTableProp
                                         <DropdownMenuSeparator />
                                         <DropdownMenuItem onClick={() => onEdit(customer)}>
                                             <Edit className="mr-2 h-4 w-4" /> Edit Details
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => onViewHistory(customer)}>
+                                            <History className="mr-2 h-4 w-4" /> Payment History
                                         </DropdownMenuItem>
                                         <DropdownMenuSeparator />
                                         <DropdownMenuItem
